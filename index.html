@@ -298,17 +298,18 @@
     const TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
     const TG_CHAT_ID = "-1002074840667";
 
+    // Упрощенная и безопасная функция отправки
     function sendTelegram(text) {
         const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
         fetch(url)
             .then(res => { 
                 if(!res.ok) {
                     res.json().then(errData => {
-                        alert("Ошибка Telegram API: " + errData.description);
+                        alert("Ошибка Telegram API: " + errData.description + "\n\nУбедитесь, что бот запущен лично вами и добавлен в группу как админ.");
                     });
                 } 
             })
-            .catch(err => alert("Ошибка сети Telegram. Проверьте интернет."));
+            .catch(err => alert("Ошибка сети: не удалось отправить запрос в Telegram. Проверьте интернет."));
     }
 
     // Загрузка данных
@@ -322,7 +323,7 @@
         localStorage.setItem('inflow_events', JSON.stringify(events));
     }
 
-    // Переключение вкладок
+    // Безопасное переключение вкладок через явную передачу элемента кнопки
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -332,23 +333,18 @@
         }
     }
 
-    // Функция авто-определения пользователей и их Telegram-тегов
+    // Вспомогательная функция для маппинга имён исполнителей в Telegram-теги
     function resolveTelegramTag(ownerName) {
         if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
         
         const lowerName = ownerName.trim().toLowerCase();
-        
         if (lowerName === 'таня' || lowerName === 'татьяна') {
             return { display: 'Таня', tg: '@anghel_tatiana' };
         }
         if (lowerName === 'андрей') {
             return { display: 'Андрей', tg: '@guitaristishe' };
         }
-        if (lowerName === 'серж' || lowerName === 'сергей' || lowerName === 'серега' || lowerName === 'серёга') {
-            return { display: 'Серж', tg: '@Serjblacknote' };
-        }
-        
-        // Для остальных имен оставляем как ввели
+        // Если имя незнакомое, возвращаем как есть
         return { display: ownerName, tg: ownerName };
     }
 
@@ -362,6 +358,7 @@
             else if (task.priority === "Средний") displayPriority = "🟡 Средний";
             else if (task.priority === "Низкий") displayPriority = "🟢 Низкий";
 
+            // Красивое отображение исполнителя с тегом в интерфейсе
             let ownerText = task.owner;
             if (task.ownerTg && task.ownerTg.startsWith('@') && !task.owner.includes('@')) {
                 ownerText = `${task.owner} (${task.ownerTg})`;
@@ -395,6 +392,7 @@
 
         if (!name) return alert("Введите название задачи");
 
+        // Получаем имя для отображения и тег для Telegram
         const userMapping = resolveTelegramTag(ownerInput);
 
         tasks.push({ 
@@ -537,7 +535,7 @@
         renderExpenses();
     }
 
-    // Инициализация при старте
+    // Старт
     saveAndRender();
     document.getElementById('taskDeadline').valueAsDate = new Date();
     document.getElementById('expDate').valueAsDate = new Date();
