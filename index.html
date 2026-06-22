@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InFlow Band Manager (Ultimate Stabilized)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>InFlow Band Manager (Mobile & Pin Optimized)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -18,7 +18,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .container {
@@ -28,15 +29,15 @@
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 10px;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: 2px;
+            font-size: 2rem;
+            letter-spacing: 1px;
             color: #fff;
         }
 
@@ -46,20 +47,26 @@
 
         .tabs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
 
         .tab-btn {
+            flex: 1 1 auto;
             background: var(--panel-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 12px 24px;
+            padding: 12px 15px;
             cursor: pointer;
             font-weight: bold;
-            border-radius: 4px;
-            transition: all 0.3s ease;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .tab-btn.active, .tab-btn:hover {
@@ -71,8 +78,8 @@
         .tab-content {
             display: none;
             background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 6px;
+            padding: 15px;
+            border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
@@ -84,66 +91,77 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             background: rgba(255,255,255,0.02);
             padding: 15px;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
         }
 
         .form-group input, .form-group select {
             flex: 1 1 150px;
-            min-width: 120px;
-            padding: 10px;
+            min-width: 110px;
+            padding: 12px;
             background: #2a2a2a;
             border: 1px solid var(--border-color);
             color: #fff;
-            border-radius: 4px;
+            border-radius: 6px;
             box-sizing: border-box;
+            font-size: 1rem;
+            min-height: 44px;
         }
 
         .form-group input[placeholder="Задача"], 
         .form-group input[placeholder="Заметки"],
-        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"],
-        .cfg-input {
+        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] {
             flex: 2 1 220px;
         }
 
         .form-group button.add-btn {
-            flex: 0 0 60px;
+            flex: 1 1 100%;
             background: var(--accent-color);
             color: #fff;
             font-weight: bold;
+            font-size: 1.2rem;
             cursor: pointer;
             border: none;
-            border-radius: 4px;
-            padding: 10px;
-        }
-
-        .form-group button.add-btn:hover {
-            background: #e02253;
+            border-radius: 6px;
+            padding: 12px;
+            min-height: 44px;
         }
 
         input:focus, select:focus {
-            outline: 1px solid var(--accent-color);
+            outline: 2px solid var(--accent-color);
+        }
+
+        /* Адаптивный скролл для таблиц на мобилках */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
             text-align: left;
+            min-width: 850px; /* Гарантирует, что данные не сольются на узком экране */
         }
 
         th, td {
-            padding: 12px;
+            padding: 12px 10px;
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
+            font-size: 0.95rem;
         }
 
         th {
             background-color: rgba(255, 33, 102, 0.1);
             color: var(--accent-color);
+            font-weight: 600;
         }
 
         tr:hover {
@@ -153,11 +171,12 @@
         .comment-cell {
             background: rgba(255,255,255,0.03);
             border: 1px dashed #555;
-            padding: 6px;
+            padding: 8px;
             color: #ccc;
             font-size: 0.9rem;
             border-radius: 4px;
-            min-width: 150px;
+            min-width: 160px;
+            word-break: break-word;
         }
 
         .comment-cell:focus {
@@ -170,29 +189,23 @@
             background: #28a745;
             color: #fff;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 14px;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 4px;
             margin-right: 5px;
             font-weight: bold;
-        }
-
-        .complete-btn:hover {
-            background: #218838;
+            min-height: 38px;
         }
 
         .delete-btn {
             background: #cc0000;
             color: #fff;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 14px;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 4px;
             font-weight: bold;
-        }
-
-        .delete-btn:hover {
-            background: #ff0000;
+            min-height: 38px;
         }
 
         .total-box {
@@ -209,10 +222,11 @@
 
         .event-tag {
             font-size: 0.8rem;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 3px 8px;
+            border-radius: 4px;
             background: #444;
             color: #fff;
+            font-weight: bold;
         }
 
         .archive-title {
@@ -224,12 +238,12 @@
         }
 
         .archived-tr {
-            opacity: 0.6;
+            opacity: 0.55;
         }
 
         .settings-card {
             background: rgba(255,255,255,0.02);
-            padding: 20px;
+            padding: 15px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
@@ -243,13 +257,52 @@
 
         .settings-card input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #2a2a2a;
             border: 1px solid var(--border-color);
             color: #fff;
-            margin-top: 5px;
-            border-radius: 4px;
+            margin-top: 8px;
+            border-radius: 6px;
             box-sizing: border-box;
+        }
+
+        /* --- СУПЕР-МЕДИА ЗАПРОС ПОД МОБИЛЬНЫЙ ХРОМ (ЭКРАНЫ СМАРТФОНОВ) --- */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            h1 { font-size: 1.6rem; }
+            
+            .tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .tabs button:nth-child(4) {
+                grid-column: span 2; /* Кнопка настроек на всю ширину ниже */
+            }
+
+            .form-group {
+                flex-direction: column;
+                padding: 10px;
+                gap: 12px;
+            }
+            
+            .form-group input, .form-group select {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+            
+            .form-group button.add-btn {
+                margin-top: 5px;
+            }
+            
+            .settings-card div {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .settings-card button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -293,40 +346,44 @@
                 <option value="Высокий">Высокий</option>
             </select>
             <input type="text" id="taskComment" placeholder="Заметки">
-            <button class="add-btn" onclick="addTask()">+</button>
+            <button class="add-btn" onclick="addTask()">Добавить задачу (+)</button>
         </div>
         
         <h3>Текущие задачи</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 15%;">Категория</th>
-                    <th style="width: 20%;">Задача</th>
-                    <th style="width: 15%;">Кто</th>
-                    <th style="width: 10%;">Дедлайн</th>
-                    <th style="width: 10%;">Статус</th>
-                    <th style="width: 10%;">Приоритет</th>
-                    <th style="width: 12%;">Комментарий</th>
-                    <th style="width: 8%;">Действия</th>
-                </tr>
-            </thead>
-            <tbody id="tasksTableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 22%;">Задача</th>
+                        <th style="width: 14%;">Кто</th>
+                        <th style="width: 10%;">Дедлайн</th>
+                        <th style="width: 10%;">Статус</th>
+                        <th style="width: 10%;">Приоритет</th>
+                        <th style="width: 12%;">Комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody"></tbody>
+            </table>
+        </div>
 
         <h3 class="archive-title">📁 Архив выполненных задач</h3>
-        <table>
-            <thead>
-                <tr style="background-color: rgba(40, 167, 69, 0.05);">
-                    <th style="width: 15%; color: #28a745;">Категория</th>
-                    <th style="width: 25%; color: #28a745;">Задача</th>
-                    <th style="width: 15%; color: #28a745;">Кто сделал</th>
-                    <th style="width: 12%; color: #28a745;">Было до</th>
-                    <th style="width: 25%; color: #28a745;">Финальный комментарий</th>
-                    <th style="width: 8%;"></th>
-                </tr>
-            </thead>
-            <tbody id="archivedTasksTableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr style="background-color: rgba(40, 167, 69, 0.05);">
+                        <th style="width: 14%; color: #28a745;">Категория</th>
+                        <th style="width: 26%; color: #28a745;">Задача</th>
+                        <th style="width: 14%; color: #28a745;">Кто сделал</th>
+                        <th style="width: 12%; color: #28a745;">Было до</th>
+                        <th style="width: 26%; color: #28a745;">Финальный комментарий</th>
+                        <th style="width: 8%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="archivedTasksTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="calendar" class="tab-content">
@@ -336,20 +393,22 @@
             <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
             <input type="text" id="eventLocation" placeholder="Место / Клуб">
             <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
-            <button class="add-btn" onclick="addEvent()">+</button>
+            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 12%;">Дата</th>
-                    <th style="width: 20%;">Событие</th>
-                    <th style="width: 18%;">Где</th>
-                    <th style="width: 42%;">Комментарий / Детали</th>
-                    <th style="width: 8%;"></th>
-                </tr>
-            </thead>
-            <tbody id="calendarTableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 20%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 42%;">Комментарий / Детали</th>
+                        <th style="width: 8%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="expenses" class="tab-content">
@@ -367,21 +426,23 @@
             <input type="text" id="expDesc" placeholder="Описание">
             <input type="number" id="expAmount" placeholder="Сумма (MDL)">
             <input type="text" id="expPaidBy" placeholder="Кто оплатил">
-            <button class="add-btn" onclick="addExpense()">+</button>
+            <button class="add-btn" onclick="addExpense()">Добавить расход (+)</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Дата</th>
-                    <th>Категория</th>
-                    <th>Описание</th>
-                    <th>Сумма</th>
-                    <th>Кто оплатил</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="expensesTableBody"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Категория</th>
+                        <th>Описание</th>
+                        <th>Сумма</th>
+                        <th>Кто оплатил</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="expensesTableBody"></tbody>
+            </table>
+        </div>
         <div class="total-box">Всего потрачено: <span id="totalAmount">0</span> MDL</div>
     </div>
 
@@ -398,70 +459,68 @@
                 ID Чата / Группы (Chat ID):
                 <input type="text" id="cfgTgChatId">
             </label>
-            <button class="tab-btn" style="background: var(--accent-color); border: none;" onclick="saveSettings()">Сохранить настройки Telegram</button>
+            <button class="tab-btn" style="background: var(--accent-color); border: none; color: #fff;" onclick="saveSettings()">Сохранить настройки Telegram</button>
         </div>
 
         <div class="settings-card">
-            <h3>🔄 Резервное копирование и Обмен данными</h3>
-            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">Вы можете выгрузить все данные в один файл для бэкапа или перенести их на другое устройство (синхронизировать).</p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="tab-btn" onclick="exportData()">📥 Экспорт данных (Скачать файл)</button>
-                <button class="tab-btn" onclick="document.getElementById('importFile').click()">📤 Импорт данных (Выбрать файл)</button>
+            <h3>🔄 Резервное копирование и Синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">Выгружайте базу данных файлом для переноса между десктопом и вашим Chrome на смартфоне.</p>
+            <div>
+                <button class="tab-btn" onclick="exportData()">📥 Скачать бэкап (Экспорт)</button>
+                <button class="tab-btn" onclick="document.getElementById('importFile').click()">📤 Загрузить файл (Импорт)</button>
                 <input type="file" id="importFile" style="display: none;" onchange="importData(this)">
-                <button class="delete-btn" style="padding: 12px 24px;" onclick="resetAllData()">⚠️ Сбросить всё</button>
+                <button class="delete-btn" style="padding: 12px 24px; margin-top:5px;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Дефолтные конфигурации Telegram
     const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
     const DEFAULT_TG_CHAT_ID = "-1002074840667";
 
     let TG_TOKEN = localStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
     let TG_CHAT_ID = localStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
 
-    function sendTelegram(text) {
+    // СТАБИЛЬНАЯ ОТПРАВКА С ФУНКЦИЕЙ ЗАКРЕПЛЕНИЯ (PIN) ДЛЯ МОБИЛЬНЫХ СЕТЕЙ
+    function sendTelegram(text, shouldPin = false) {
         if(!TG_TOKEN || !TG_CHAT_ID) return;
         const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
-        fetch(url).catch(err => console.error("Ошибка отправки в Telegram:", err));
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                // Если флаг shouldPin активен, берем message_id отправленного сообщения и шлем запрос на закрепление
+                if (shouldPin && data.ok && data.result && data.result.message_id) {
+                    const msgId = data.result.message_id;
+                    const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${msgId}&disable_notification=true`;
+                    fetch(pinUrl).catch(err => console.error("Ошибка закрепления сообщения:", err));
+                }
+            })
+            .catch(err => console.error("Ошибка отправки в Telegram:", err));
     }
 
-    // Параноидальная инициализация массивов (Защита от сбоев "Not a function")
     let tasks = [];
     let archivedTasks = [];
     let expenses = [];
     let events = [];
 
     try {
-        const rawTasks = JSON.parse(localStorage.getItem('inflow_tasks'));
-        tasks = Array.isArray(rawTasks) ? rawTasks : [];
-
-        const rawArchived = JSON.parse(localStorage.getItem('inflow_archived_tasks'));
-        archivedTasks = Array.isArray(rawArchived) ? rawArchived : [];
-
-        const rawExpenses = JSON.parse(localStorage.getItem('inflow_expenses'));
-        expenses = Array.isArray(rawExpenses) ? rawExpenses : [];
-
-        const rawEvents = JSON.parse(localStorage.getItem('inflow_events'));
-        events = Array.isArray(rawEvents) ? rawEvents : [];
+        tasks = Array.isArray(JSON.parse(localStorage.getItem('inflow_tasks'))) ? JSON.parse(localStorage.getItem('inflow_tasks')) : [];
+        archivedTasks = Array.isArray(JSON.parse(localStorage.getItem('inflow_archived_tasks'))) ? JSON.parse(localStorage.getItem('inflow_archived_tasks')) : [];
+        expenses = Array.isArray(JSON.parse(localStorage.getItem('inflow_expenses'))) ? JSON.parse(localStorage.getItem('inflow_expenses')) : [];
+        events = Array.isArray(JSON.parse(localStorage.getItem('inflow_events'))) ? JSON.parse(localStorage.getItem('inflow_events')) : [];
     } catch (e) {
-        console.error("Критический сбой структуры данных. База очищена.", e);
+        console.error("Сбой парсинга кэша. База нормализована.", e);
     }
 
     function saveData() {
-        try {
-            localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-            localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
-            localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
-            localStorage.setItem('inflow_events', JSON.stringify(events));
-        } catch(e) {
-            console.error("Ошибка сохранения данных в браузер:", e);
-        }
+        localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
+        localStorage.setItem('inflow_events', JSON.stringify(events));
     }
 
-    // Железно работающее переключение вкладок
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -471,11 +530,9 @@
         if (btnElement) btnElement.classList.add('active');
     }
 
-    // Авто-маппинг участников
     function resolveTelegramTag(ownerName) {
         if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
         const lowerName = String(ownerName).trim().toLowerCase();
-        
         if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
         if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
         if (lowerName === 'серж' || lowerName === 'сергей' || lowerName === 'серега' || lowerName === 'серёга') {
@@ -484,11 +541,10 @@
         return { display: ownerName, tg: ownerName };
     }
 
-    // --- ЛОГИКА ЗАДАЧ ---
+    // --- ЗАДАЧИ ---
     function renderTasks() {
         const tbody = document.getElementById('tasksTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        if (!tbody) return; tbody.innerHTML = '';
         
         tasks.forEach((task, index) => {
             let displayPriority = task.priority || "Низкий";
@@ -520,8 +576,7 @@
 
     function renderArchivedTasks() {
         const tbody = document.getElementById('archivedTasksTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        if (!tbody) return; tbody.innerHTML = '';
 
         archivedTasks.forEach((task, index) => {
             tbody.innerHTML += `
@@ -537,7 +592,6 @@
     }
 
     function updateTaskComment(index, el) { if(tasks[index]) { tasks[index].comment = el.innerText; saveData(); } }
-    
     function updateArchiveComment(index, el) { if(archivedTasks[index]) { archivedTasks[index].comment = el.innerText; saveData(); } }
 
     function addTask() {
@@ -556,12 +610,14 @@
         tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, status, priority, comment });
         saveAndRender();
 
-        let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
+        let priorityIcon = priority === "High" || priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
         let statusIcon = status === "Ожидание" ? "⚠️" : (status === "Готово" ? "✅" : "⏳");
 
-        let message = `📝 Добавлена задача в категорию [${category}]\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline || 'Не указан'}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
-        if(comment) message += `\nЗаметка: ${comment}`;
-        sendTelegram(message);
+        let message = `📌 НОВАЯ ЗАДАЧА В ЗАКРЕП! [Категория: ${category}]\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline || 'Не указан'}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
+        if(comment) message += `\nЗаметки: ${comment}`;
+        
+        // Отправляем и принудительно закрепляем в топе чата (передаем true)
+        sendTelegram(message, true);
 
         document.getElementById('taskName').value = '';
         document.getElementById('taskOwner').value = '';
@@ -576,9 +632,8 @@
         saveAndRender();
 
         let targetTg = completedTask.ownerTg || completedTask.owner;
-        let message = `✅ ЗАДАЧА ВЫПОЛНЕНА И УШЛА В АРХИВ!\n\n• Категория: ${completedTask.category}\n• Задача: ${completedTask.name}\n• Исполнитель: ${targetTg}`;
-        if(completedTask.comment) message += `\n• Комментарий: ${completedTask.comment}`;
-        sendTelegram(message);
+        let message = `✅ ЗАДАЧА УСПЕШНО ВЫПОЛНЕНА!\n\n• Категория: ${completedTask.category}\n• Задача: ${completedTask.name}\n• Выполнил: ${targetTg}`;
+        sendTelegram(message, false); // Обычное сообщение без закрепа
     }
 
     function deleteTask(index) {
@@ -586,7 +641,7 @@
         const deleted = tasks[index];
         tasks.splice(index, 1);
         saveAndRender();
-        sendTelegram(`🗑 Отменена задача: "${deleted.name}"`);
+        sendTelegram(`🗑 Отменена задача: "${deleted.name}"`, false);
     }
 
     function deleteArchivedTask(index) {
@@ -595,11 +650,10 @@
         saveAndRender();
     }
 
-    // --- ЛОГИКА КАЛЕНДАРЯ ---
+    // --- КАЛЕНДАРЬ ---
     function renderEvents() {
         const tbody = document.getElementById('calendarTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        if (!tbody) return; tbody.innerHTML = '';
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
         events.forEach((ev, index) => {
             tbody.innerHTML += `
@@ -626,8 +680,11 @@
         events.push({ date, name, location, comment });
         saveAndRender();
 
-        let message = `📅 Мероприятие в календаре: ${name}\nКогда: ${date}\nГде: ${location}`;
-        sendTelegram(message);
+        let message = `📅 НОВОЕ МЕРОПРИЯТИЕ ДОБАВЛЕНО В ЗАКРЕП!\n\nСобытие: ${name}\nКогда: ${date}\nГде: ${location}`;
+        if(comment) message += `\nДетали: ${comment}`;
+        
+        // Закрепляем важные анонсы концертов/репетиций
+        sendTelegram(message, true);
 
         document.getElementById('eventName').value = '';
         document.getElementById('eventLocation').value = '';
@@ -639,14 +696,13 @@
         const deleted = events[index];
         events.splice(index, 1);
         saveAndRender();
-        sendTelegram(`❌ Удалено событие: "${deleted.name}"`);
+        sendTelegram(`❌ Мероприятие отменено: "${deleted.name}"`, false);
     }
 
-    // --- ЛОГИКА РАСХОДОВ ---
+    // --- РАСХОДЫ ---
     function renderExpenses() {
         const tbody = document.getElementById('expensesTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        if (!tbody) return; tbody.innerHTML = '';
         let total = 0;
         expenses.forEach((exp, index) => {
             total += Number(exp.amount || 0);
@@ -675,8 +731,8 @@
         expenses.push({ date, category, desc, amount: Number(amount), paidBy });
         saveAndRender();
 
-        let message = `💰 Расход: ${desc}\nСумма: ${amount} MDL\nКатегория: ${category}\nВнес: ${paidBy}`;
-        sendTelegram(message);
+        let message = `💰 Расход: ${desc}\nСумма: ${amount} MDL\nКатегория: ${category}\nОплатил: ${paidBy}`;
+        sendTelegram(message, false);
 
         document.getElementById('expDesc').value = '';
         document.getElementById('expAmount').value = '';
@@ -685,12 +741,11 @@
 
     function deleteExpense(index) {
         if(!expenses[index]) return;
-        const deleted = expenses[index];
         expenses.splice(index, 1);
         saveAndRender();
     }
 
-    // --- НАСТРОЙКИ, СИНХРОНИЗАЦИЯ, РЕЗЕРВНОЕ КОПИРОВАНИЕ ---
+    // --- СИНХРОНИЗАЦИЯ И БЭКАПЫ ---
     function loadSettingsInputs() {
         document.getElementById('cfgTgToken').value = TG_TOKEN;
         document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
@@ -699,18 +754,18 @@
     function saveSettings() {
         const token = document.getElementById('cfgTgToken').value.trim();
         const chatId = document.getElementById('cfgTgChatId').value.trim();
-        if(!token || !chatId) return alert("Заполните поля токена и ID чата!");
+        if(!token || !chatId) return alert("Заполните настройки!");
         TG_TOKEN = token;
         TG_CHAT_ID = chatId;
         localStorage.setItem('inflow_tg_token', token);
         localStorage.setItem('inflow_tg_chat_id', chatId);
-        alert("Настройки Telegram успешно обновлены!");
+        alert("Конфигурация бота сохранена!");
     }
 
     function exportData() {
         const dataStr = JSON.stringify({ tasks, archivedTasks, expenses, events }, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const fileName = 'inflow_backup_' + new Date().toISOString().split('T')[0] + '.json';
+        const fileName = 'inflow_mobile_backup_' + new Date().toISOString().split('T')[0] + '.json';
 
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute('href', dataUri);
@@ -731,22 +786,21 @@
                 events = Array.isArray(imported.events) ? imported.events : events;
                 
                 saveAndRender();
-                alert("Данные успешно синхронизированы и импортированы!");
+                alert("Данные успешно подтянуты на телефон!");
             } catch (err) {
-                alert("Ошибка чтения файла! Проверьте формат бэкапа.");
+                alert("Некорректный файл резервной копии.");
             }
         };
         reader.readAsText(file);
     }
 
     function resetAllData() {
-        if(confirm("Вы действительно хотите полностью стереть всю базу данных? Это действие сотрет все задачи и историю.")) {
+        if(confirm("Полностью стереть локальный кэш приложения? Потребуется настроить токен заново.")) {
             localStorage.clear();
             tasks = []; archivedTasks = []; expenses = []; events = [];
             TG_TOKEN = DEFAULT_TG_TOKEN; TG_CHAT_ID = DEFAULT_TG_CHAT_ID;
             saveAndRender();
             loadSettingsInputs();
-            alert("Все данные успешно сброшены.");
         }
     }
 
@@ -758,7 +812,7 @@
         renderExpenses();
     }
 
-    // Инициализация системы при загрузке страницы
+    // Запуск системы
     saveAndRender();
     loadSettingsInputs();
 
