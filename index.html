@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>InFlow Band Manager Cloud</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisInitted()" async defer></script>
     <style>
         *, *:before, *:after { box-sizing: border-box; }
         :root {
@@ -70,7 +70,7 @@
             background: #1a2a3a; border: 1px solid #2a5a8a; padding: 12px 20px;
             border-radius: 6px; margin-bottom: 15px; font-weight: bold;
         }
-        .cloud-btn { background: #2a7af3; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .cloud-btn { background: #2a7af3; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         .cloud-btn.connected { background: var(--success-color); }
 
         @media (max-width: 768px) {
@@ -95,8 +95,8 @@
     </header>
 
     <div class="cloud-banner">
-        <div>☁️ Облако Google Drive: <span id="cloudStatus" style="color: #ffaa00;">Не подключено</span></div>
-        <button id="cloudBtn" class="cloud-btn" onclick="handleAuthClick()">Войти в Google аккаунт</button>
+        <div>☁️ Облако Google Drive: <span id="cloudStatus" style="color: #ffaa00;">Загрузка скрипта...</span></div>
+        <button id="cloudBtn" class="cloud-btn" onclick="handleAuthClick()">Подключение...</button>
     </div>
 
     <div class="tabs">
@@ -253,7 +253,7 @@
 </div>
 
 <script>
-    // НАСТРОЙКА GOOGLE DRIVE API
+    // СЮДА ВСТАВЬТЕ ВАШ КЛЮЧ ИЗ GOOGLE CLOUD CONSOLE
     const GOOGLE_CLIENT_ID = 122806778753-c7ed6ei5l0j2n5vq4c27hbu49b7rr4pl.apps.googleusercontent.com;
     const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
     
@@ -289,33 +289,53 @@
         }).catch(err => console.error(err));
     }
 
-    // ИНИЦИАЛИЗАЦИЯ КЛИЕНТА GOOGLE
+    // НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE API (вызывается через onload скрипта в head)
     function gisInitted() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: (resp) => {
-                if (resp.error) {
-                    alert("Ошибка авторизации Google: " + resp.error);
-                    return;
-                }
-                accessToken = resp.access_token;
-                sessionStorage.setItem('gdrive_token', accessToken);
-                updateCloudUI(true, "Подключено (Синхронизация...)");
+        console.log("Скрипт Google Identity Services успешно загружен.");
+        try {
+            if (GOOGLE_CLIENT_ID.includes('ВСТАВЬТЕ_СЮДА')) {
+                updateCloudUI(false, "Не заменен Client ID");
+                return;
+            }
+
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: SCOPES,
+                callback: (resp) => {
+                    if (resp.error) {
+                        alert("Ошибка авторизации Google: " + resp.error);
+                        return;
+                    }
+                    accessToken = resp.access_token;
+                    sessionStorage.setItem('gdrive_token', accessToken);
+                    updateCloudUI(true, "Синхронизация...");
+                    syncWithGoogleDrive();
+                },
+            });
+
+            if (accessToken) {
+                updateCloudUI(true, "Активно (Облако)");
                 syncWithGoogleDrive();
-            },
-        });
-        if (accessToken) {
-            updateCloudUI(true, "Активно (Облако)");
-            syncWithGoogleDrive();
+            } else {
+                updateCloudUI(false, "Готов к авторизации");
+            }
+        } catch (err) {
+            console.error("Ошибка инициализации Google Client:", err);
+            updateCloudUI(false, "Ошибка запуска Auth");
         }
     }
 
     function handleAuthClick() {
-        if (!tokenClient) {
-            alert("Google скрипт еще загружается или неверный Client ID. Подождите секунду.");
+        if (window.location.protocol === 'file:') {
+            alert("🚨 Ошибка безопасности Google:\n\nGoogle запрещает авторизацию при открытии файла напрямую (через double-click).\n\nЗагрузите файл на бесплатный хостинг (Vercel, Netlify) или запустите локальный сервер, чтобы в строке адреса был http:// или https://");
             return;
         }
+
+        if (!tokenClient) {
+            alert("Google API еще не инициализировано. Проверьте правильность Client ID в коде.");
+            return;
+        }
+        
         if (accessToken) {
             accessToken = null;
             sessionStorage.removeItem('gdrive_token');
@@ -338,11 +358,10 @@
         }
     }
 
-    // СТРАТЕГИЯ СИНХРОНИЗАЦИИ GOOGLE DRIVE
+    // СИНХРОНИЗАЦИЯ С ДИСКОМ
     async function syncWithGoogleDrive() {
         if (!accessToken) return;
         try {
-            // 1. Ищем файл на диске, если ID не сохранен локально
             if (!googleFileId) {
                 let res = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='inflow_band_manager.json' and trashed=false`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -354,7 +373,6 @@
                 }
             }
 
-            // 2. Если файл есть — скачиваем и обновляем локальные данные
             if (googleFileId) {
                 let fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${googleFileId}?alt=media`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -370,16 +388,13 @@
                     updateCloudUI(true, "Синхронизировано ✨");
                     return;
                 } else if (fileRes.status === 401) {
-                    // Токен устарел
                     updateCloudUI(false, "Сессия истекла. Войдите заново");
                     return;
                 }
             }
-
-            // 3. Если файла нет — создаем его в облаке, выгрузив текущие локальные данные
             await uploadDataToCloud();
         } catch (e) {
-            console.error("Сбой синхронизации с облаком:", e);
+            console.error("Сбой синхронизации:", e);
             updateCloudUI(true, "Ошибка сети Диска");
         }
     }
@@ -391,7 +406,6 @@
 
         try {
             if (!googleFileId) {
-                // Создание файла
                 let metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -402,7 +416,6 @@
                 localStorage.setItem('gdrive_file_id', googleFileId);
             }
 
-            // Обновление контента
             await fetch(`https://www.googleapis.com/upload/drive/v3/files/${googleFileId}?uploadType=media`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -432,7 +445,7 @@
 
     function saveData() {
         saveLocalDataOnly();
-        uploadDataToCloud(); // Фоновое сохранение в Google Drive
+        uploadDataToCloud(); 
     }
 
     function switchTab(tabId, btnElement) {
@@ -514,7 +527,7 @@
         
         saveData(); renderTasks();
 
-        let message = `📌 НОВАЯ ЗАЗАЧА [${category}]\n\nЧто: ${name}\nКто: ${userMapping.tg}\nДедлайн: ${deadline || '—'}`;
+        let message = `📌 НОВАЯ ЗАДАЧА [${category}]\n\nЧто: ${name}\nКто: ${userMapping.tg}\nДедлайн: ${deadline || '—'}`;
         sendTelegram(message, true);
 
         document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
@@ -641,9 +654,6 @@
         if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
         if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
         if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
-
-        // Ждем загрузки скрипта Google, затем инициализируем OAuth client
-        setTimeout(() => { if (typeof google !== 'undefined') gisInitted(); }, 1500);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
