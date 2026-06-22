@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InFlow Band Manager Cloud</title>
-    <script src="https://accounts.google.com/gsi/client" onload="gisInitted()" async defer></script>
+    <title>InFlow Band Manager Pro</title>
     <style>
-        *, *:before, *:after { box-sizing: border-box; }
+        /* Железобетонный сброс размеров */
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-color: #121212;
             --panel-bg: #1e1e1e;
@@ -16,74 +19,300 @@
             --success-color: #28a745;
             --danger-color: #dc3545;
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 15px;
             -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 1250px; margin: 0 auto; width: 100%; }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
-        h1 { margin: 0; font-size: 2rem; letter-spacing: 1px; color: #fff; }
-        h1 span { color: var(--accent-color); }
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn {
-            flex: 1 1 auto; background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--border-color);
-            padding: 12px 15px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: all 0.2s ease;
-            font-size: 0.95rem; min-height: 44px; display: flex; align-items: center; justify-content: center;
+
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            width: 100%;
         }
-        .tab-btn.active, .tab-btn:hover { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
-        .tab-content { display: none; background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .tab-content.active { display: block !important; }
-        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
-        .form-group input, .form-group select { flex: 1 1 140px; min-width: 110px; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 1rem; min-height: 44px; }
-        .form-group input[placeholder="Задача"], .form-group input[placeholder="Заметки"], .form-group input[placeholder="Описание транзакции"], .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] { flex: 2 1 220px; }
-        .form-group button.add-btn { flex: 1 1 100%; background: var(--accent-color); color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; padding: 12px; min-height: 44px; }
-        input:focus, select:focus { outline: 2px solid var(--accent-color); }
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 850px; }
-        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
-        th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
-        tr:hover { background: rgba(255,255,255,0.02); }
-        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #ccc; font-size: 0.9rem; border-radius: 4px; min-width: 160px; }
-        .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
-        .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
-        .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
-        .finance-summary { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: flex-end; }
-        .summary-box { background: #222; padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 1.1rem; font-weight: bold; }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        h1 span {
+            color: var(--accent-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1 1 auto;
+            background: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .tab-content.active {
+            display: block !important;
+        }
+
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group input, .form-group select {
+            flex: 1 1 140px;
+            min-width: 110px;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-height: 44px;
+        }
+
+        .form-group input[placeholder="Задача"], 
+        .form-group input[placeholder="Заметки"],
+        .form-group input[placeholder="Описание транзакции"],
+        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] {
+            flex: 2 1 220px;
+        }
+
+        .form-group button.add-btn {
+            flex: 1 1 100%;
+            background: var(--accent-color);
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            min-height: 44px;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid var(--accent-color);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: rgba(255, 33, 102, 0.1);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Безопасные инпуты внутри ячеек вместо contenteditable */
+        .table-comment-input {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed #555;
+            padding: 8px;
+            color: #ccc;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            min-width: 160px;
+            transition: all 0.2s;
+        }
+
+        .table-comment-input:focus {
+            background: #2a2a2a;
+            border: 1px solid var(--accent-color);
+            color: #fff;
+            outline: none;
+        }
+
+        .complete-btn {
+            background: var(--success-color);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 5px;
+            font-weight: bold;
+            min-height: 38px;
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            min-height: 38px;
+        }
+
+        .finance-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .summary-box {
+            background: #222;
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
         .summary-box.income-box span { color: var(--success-color); }
         .summary-box.expense-box span { color: var(--danger-color); }
         .summary-box.balance-box span { color: #00fff0; }
-        .event-tag { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; background: #444; color: #fff; font-weight: bold; }
+
+        .event-tag {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #444;
+            color: #fff;
+            font-weight: bold;
+        }
+
         .archived-tr { opacity: 0.6; }
         .income-tr { background-color: rgba(40, 167, 69, 0.03); }
         .expense-tr { background-color: rgba(220, 53, 69, 0.03); }
-        .settings-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px; }
-        .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
-        .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
-        
-        /* Стили для панели облака */
-        .cloud-banner {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #1a2a3a; border: 1px solid #2a5a8a; padding: 12px 20px;
-            border-radius: 6px; margin-bottom: 15px; font-weight: bold;
+
+        .settings-card {
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
-        .cloud-btn { background: #2a7af3; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
-        .cloud-btn.connected { background: var(--success-color); }
+
+        .settings-card label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .settings-card input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
 
         @media (max-width: 768px) {
             body { padding: 8px; }
             h1 { font-size: 1.5rem; }
-            .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-            .tabs button:nth-child(5) { grid-column: span 2; }
-            .form-group { display: flex !important; flex-direction: column !important; gap: 10px; padding: 12px; }
-            .form-group input, .form-group select, .form-group button.add-btn { width: 100% !important; flex: none !important; font-size: 16px !important; }
-            .table-comment-input { font-size: 16px !important; }
-            .finance-summary { flex-direction: column; align-items: stretch; }
+            
+            .tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .tabs button:nth-child(5) {
+                grid-column: span 2;
+            }
+
+            .form-group {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px;
+                padding: 12px;
+            }
+            
+            .form-group input, 
+            .form-group select, 
+            .form-group button.add-btn {
+                width: 100% !important;
+                flex: none !important;
+                font-size: 16px !important; /* Убирает авто-зум на iOS Safari */
+            }
+
+            .table-comment-input {
+                font-size: 16px !important;
+            }
+
+            .finance-summary {
+                flex-direction: column;
+                align-items: stretch;
+            }
             .summary-box { text-align: center; }
-            .cloud-banner { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
 </head>
@@ -91,13 +320,8 @@
 
 <div class="container">
     <header>
-        <h1>INFLOW <span>| Cloud Band Manager</span></h1>
+        <h1>INFLOW <span>| Band Manager Pro</span></h1>
     </header>
-
-    <div class="cloud-banner">
-        <div>☁️ Облако Google Drive: <span id="cloudStatus" style="color: #ffaa00;">Загрузка скрипта...</span></div>
-        <button id="cloudBtn" class="cloud-btn" onclick="handleAuthClick()">Подключение...</button>
-    </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
@@ -135,6 +359,7 @@
             <input type="text" id="taskComment" placeholder="Заметки">
             <button class="add-btn" onclick="addTask()">Добавить задачу (+)</button>
         </div>
+        
         <h3>Текущие дела</h3>
         <div class="table-wrapper">
             <table>
@@ -157,15 +382,16 @@
 
     <div id="archive" class="tab-content">
         <h2>📁 Архив выполненных задач</h2>
+        <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">История успешно завершенных тасков группы.</p>
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr>
-                        <th style="width: 14%;">Категория</th>
-                        <th style="width: 26%;">Задача</th>
-                        <th style="width: 14%;">Кто сделал</th>
-                        <th style="width: 12%;">Дедлайн</th>
-                        <th style="width: 26%;">Финальный комментарий</th>
+                    <tr style="background-color: rgba(40, 167, 69, 0.05);">
+                        <th style="width: 14%; color: #28a745;">Категория</th>
+                        <th style="width: 26%; color: #28a745;">Задача</th>
+                        <th style="width: 14%; color: #28a745;">Кто сделал</th>
+                        <th style="width: 12%; color: #28a745;">Дедлайн был</th>
+                        <th style="width: 26%; color: #28a745;">Финальный комментарий</th>
                         <th style="width: 8%;">Действия</th>
                     </tr>
                 </thead>
@@ -200,7 +426,7 @@
     </div>
 
     <div id="finance" class="tab-content">
-        <h2>Управление финансами</h2>
+        <h2>Управление финансами группы</h2>
         <div class="form-group">
             <input type="date" id="finDate">
             <select id="finType">
@@ -214,21 +440,33 @@
                 <option value="Маркетинг / PR">Маркетинг / PR</option>
                 <option value="Мерч">Мерч</option>
                 <option value="Оборудование">Оборудование</option>
+                <option value="Стриминг / Дистрибуция">Стриминг / Дистрибуция</option>
                 <option value="Другое">Другое</option>
             </select>
-            <input type="text" id="finDesc" placeholder="Описание">
+            <input type="text" id="finDesc" placeholder="Описание транзакции">
             <input type="number" id="finAmount" placeholder="Сумма (MDL)">
-            <input type="text" id="finUser" placeholder="Кто внес">
+            <input type="text" id="finUser" placeholder="Кто внес / оплатил">
             <button class="add-btn" onclick="addFinanceTransaction()">Внести в бюджет (+)</button>
         </div>
+
+        <h3>История транзакций</h3>
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr><th>Дата</th><th>Тип</th><th>Категория</th><th>Описание</th><th>Сумма</th><th>Кто</th><th></th></tr>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 12%;">Тип</th>
+                        <th style="width: 18%;">Категория</th>
+                        <th style="width: 28%;">Описание</th>
+                        <th style="width: 12%;">Сумма</th>
+                        <th style="width: 13%;">Кто</th>
+                        <th style="width: 5%;"></th>
+                    </tr>
                 </thead>
                 <tbody id="financeTableBody"></tbody>
             </table>
         </div>
+
         <div class="finance-summary">
             <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
             <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
@@ -237,195 +475,84 @@
     </div>
 
     <div id="settings" class="tab-content">
-        <h2>Настройки</h2>
+        <h2>Настройки системы и Синхронизация</h2>
+        
         <div class="settings-card">
             <h3>🔔 Уведомления Telegram Bot</h3>
-            <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
-            <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
-            <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
+            <label>
+                Токен Бота (Bot Token):
+                <input type="text" id="cfgTgToken">
+            </label>
+            <label>
+                ID Чата / Группы (Chat ID):
+                <input type="text" id="cfgTgChatId">
+            </label>
+            <button class="tab-btn" style="background: var(--accent-color); border: none; color: #fff;" onclick="saveSettings()">Сохранить настройки Telegram</button>
         </div>
+
         <div class="settings-card">
-            <h3>🔄 Ручное управление кэшем</h3>
-            <button class="tab-btn" onclick="exportData()">📥 Скачать локальный бэкап JSON</button>
-            <button class="delete-btn" style="padding: 12px 24px; margin-top:5px;" onclick="resetAllData()">⚠️ Сбросить локальную базу</button>
+            <h3>🔄 Резервное копирование и Синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">Выгружайте базу данных файлом для мгновенного переноса данных между десктопом и Chrome/Safari на вашем смартфоне.</p>
+            <div>
+                <button class="tab-btn" onclick="exportData()">📥 Скачать бэкап (Экспорт)</button>
+                <button class="tab-btn" onclick="document.getElementById('importFile').click()">📤 Загрузить файл (Импорт)</button>
+                <input type="file" id="importFile" style="display: none;" onchange="importData(this)">
+                <button class="delete-btn" style="padding: 12px 24px; margin-top:5px;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // СЮДА ВСТАВЬТЕ ВАШ КЛЮЧ ИЗ GOOGLE CLOUD CONSOLE
-    const GOOGLE_CLIENT_ID = 122806778753-c7ed6ei5l0j2n5vq4c27hbu49b7rr4pl.apps.googleusercontent.com;
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
-    
-    let tokenClient;
-    let accessToken = sessionStorage.getItem('gdrive_token') || null;
-    let googleFileId = localStorage.getItem('gdrive_file_id') || null;
-
+    // Защищенная обертка для LocalStorage (Предотвращает сбои на iOS в инкогнито-режиме)
     const SafeStorage = {
-        getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
-        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
-        clear() { try { localStorage.clear(); } catch (e) {} }
+        getItem(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        },
+        setItem(key, val) {
+            try { localStorage.setItem(key, val); } catch (e) { console.warn("Хранилище недоступно для записи:", e); }
+        },
+        clear() {
+            try { localStorage.clear(); } catch (e) { console.warn("Не удалось очистить хранилище:", e); }
+        }
     };
 
     const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
     const DEFAULT_TG_CHAT_ID = "-1002074840667";
+
     let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
     let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
 
-    let tasks = [], archivedTasks = [], financeTransactions = [], events = [];
-
     function escapeHTML(str) {
         if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     function sendTelegram(text, shouldPin = false) {
         if(!TG_TOKEN || !TG_CHAT_ID) return;
         const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
-        fetch(url).then(res => res.json()).then(data => {
-            if (shouldPin && data.ok && data.result?.message_id) {
-                fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
-            }
-        }).catch(err => console.error(err));
-    }
-
-    // НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ GOOGLE API (вызывается через onload скрипта в head)
-    function gisInitted() {
-        console.log("Скрипт Google Identity Services успешно загружен.");
-        try {
-            if (GOOGLE_CLIENT_ID.includes('ВСТАВЬТЕ_СЮДА')) {
-                updateCloudUI(false, "Не заменен Client ID");
-                return;
-            }
-
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: SCOPES,
-                callback: (resp) => {
-                    if (resp.error) {
-                        alert("Ошибка авторизации Google: " + resp.error);
-                        return;
-                    }
-                    accessToken = resp.access_token;
-                    sessionStorage.setItem('gdrive_token', accessToken);
-                    updateCloudUI(true, "Синхронизация...");
-                    syncWithGoogleDrive();
-                },
-            });
-
-            if (accessToken) {
-                updateCloudUI(true, "Активно (Облако)");
-                syncWithGoogleDrive();
-            } else {
-                updateCloudUI(false, "Готов к авторизации");
-            }
-        } catch (err) {
-            console.error("Ошибка инициализации Google Client:", err);
-            updateCloudUI(false, "Ошибка запуска Auth");
-        }
-    }
-
-    function handleAuthClick() {
-        if (window.location.protocol === 'file:') {
-            alert("🚨 Ошибка безопасности Google:\n\nGoogle запрещает авторизацию при открытии файла напрямую (через double-click).\n\nЗагрузите файл на бесплатный хостинг (Vercel, Netlify) или запустите локальный сервер, чтобы в строке адреса был http:// или https://");
-            return;
-        }
-
-        if (!tokenClient) {
-            alert("Google API еще не инициализировано. Проверьте правильность Client ID в коде.");
-            return;
-        }
         
-        if (accessToken) {
-            accessToken = null;
-            sessionStorage.removeItem('gdrive_token');
-            updateCloudUI(false, "Отключено");
-        } else {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        }
-    }
-
-    function updateCloudUI(connected, text) {
-        const status = document.getElementById('cloudStatus');
-        const btn = document.getElementById('cloudBtn');
-        if(status) {
-            status.innerText = text;
-            status.style.color = connected ? "var(--success-color)" : "#ffaa00";
-        }
-        if(btn) {
-            btn.innerText = connected ? "Выйти из Google" : "Войти в Google аккаунт";
-            if(connected) btn.classList.add('connected'); else btn.classList.remove('connected');
-        }
-    }
-
-    // СИНХРОНИЗАЦИЯ С ДИСКОМ
-    async function syncWithGoogleDrive() {
-        if (!accessToken) return;
-        try {
-            if (!googleFileId) {
-                let res = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='inflow_band_manager.json' and trashed=false`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                let data = await res.json();
-                if (data.files && data.files.length > 0) {
-                    googleFileId = data.files[0].id;
-                    localStorage.setItem('gdrive_file_id', googleFileId);
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (shouldPin && data.ok && data.result && data.result.message_id) {
+                    const msgId = data.result.message_id;
+                    const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${msgId}&disable_notification=true`;
+                    fetch(pinUrl).catch(err => console.error("Ошибка авто-закрепления:", err));
                 }
-            }
-
-            if (googleFileId) {
-                let fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${googleFileId}?alt=media`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (fileRes.status === 200) {
-                    let cloudData = await fileRes.json();
-                    tasks = cloudData.tasks || [];
-                    archivedTasks = cloudData.archivedTasks || [];
-                    financeTransactions = cloudData.financeTransactions || [];
-                    events = cloudData.events || [];
-                    saveLocalDataOnly();
-                    renderAllTables();
-                    updateCloudUI(true, "Синхронизировано ✨");
-                    return;
-                } else if (fileRes.status === 401) {
-                    updateCloudUI(false, "Сессия истекла. Войдите заново");
-                    return;
-                }
-            }
-            await uploadDataToCloud();
-        } catch (e) {
-            console.error("Сбой синхронизации:", e);
-            updateCloudUI(true, "Ошибка сети Диска");
-        }
+            })
+            .catch(err => console.error("Ошибка Telegram API:", err));
     }
 
-    async function uploadDataToCloud() {
-        if (!accessToken) return;
-        const payload = { tasks, archivedTasks, financeTransactions, events };
-        const bodyStr = JSON.stringify(payload);
-
-        try {
-            if (!googleFileId) {
-                let metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: 'inflow_band_manager.json', mimeType: 'application/json' })
-                });
-                let meta = await metaRes.json();
-                googleFileId = meta.id;
-                localStorage.setItem('gdrive_file_id', googleFileId);
-            }
-
-            await fetch(`https://www.googleapis.com/upload/drive/v3/files/${googleFileId}?uploadType=media`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                body: bodyStr
-            });
-            updateCloudUI(true, "Облако обновлено ✅");
-        } catch (e) {
-            console.error("Не удалось сохранить в облако", e);
-        }
-    }
+    let tasks = [];
+    let archivedTasks = [];
+    let financeTransactions = [];
+    let events = [];
 
     function loadLocalStorage() {
         try {
@@ -433,25 +560,29 @@
             archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
             events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
             financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
-        } catch (e) {}
+        } catch (e) {
+            console.error("Ошибка загрузки данных из кэша:", e);
+        }
+
+        if (!Array.isArray(tasks)) tasks = [];
+        if (!Array.isArray(archivedTasks)) archivedTasks = [];
+        if (!Array.isArray(financeTransactions)) financeTransactions = [];
+        if (!Array.isArray(events)) events = [];
     }
 
-    function saveLocalDataOnly() {
+    function saveData() {
         SafeStorage.setItem('inflow_tasks', JSON.stringify(tasks));
         SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
         SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
         SafeStorage.setItem('inflow_events', JSON.stringify(events));
     }
 
-    function saveData() {
-        saveLocalDataOnly();
-        uploadDataToCloud(); 
-    }
-
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
+        
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.add('active');
         if (btnElement) btnElement.classList.add('active');
     }
 
@@ -460,52 +591,92 @@
         const lowerName = String(ownerName).trim().toLowerCase();
         if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
         if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
-        if (lowerName === 'серж' || lowerName === 'сергей') return { display: 'Серж', tg: '@Serjblacknote' };
+        if (lowerName === 'серж' || lowerName === 'сергей' || lowerName === 'серега' || lowerName === 'серёга') {
+            return { display: 'Серж', tg: '@Serjblacknote' };
+        }
         return { display: ownerName, tg: ownerName };
     }
 
     function renderTasks() {
-        const tbody = document.getElementById('tasksTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
-        if (tasks.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
-            return;
-        }
-        tasks.forEach((task, index) => {
-            let displayPriority = task.priority === "Высокий" ? "🔴 Высокий" : (task.priority === "Средний" ? "🟡 Средний" : "🟢 Низкий");
-            tbody.innerHTML += `<tr>
-                <td><span class="event-tag">${escapeHTML(task.category)}</span></td>
-                <td><b>${escapeHTML(task.name)}</b></td>
-                <td>${escapeHTML(task.owner)}</td>
-                <td>${escapeHTML(task.deadline)}</td>
-                <td>${escapeHTML(task.status)}</td>
-                <td>${displayPriority}</td>
-                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateTaskComment(${index}, this.value)"></td>
-                <td style="white-space:nowrap;">
-                    <button class="complete-btn" onclick="archiveTask(${index})">✓</button>
-                    <button class="delete-btn" onclick="deleteTask(${index})">×</button>
-                </td>
-            </tr>`;
-        });
+        try {
+            const tbody = document.getElementById('tasksTableBody');
+            if (!tbody) return; 
+            tbody.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">🎉 Активных задач нет. Отдыхаем!</td></tr>`;
+                return;
+            }
+
+            tasks.forEach((task, index) => {
+                if (!task) return;
+                let category = escapeHTML(task.category || 'Организация');
+                let name = escapeHTML(task.name || 'Без названия');
+                let owner = escapeHTML(task.owner || 'Не указан');
+                let ownerTg = escapeHTML(task.ownerTg || '');
+                let deadline = escapeHTML(task.deadline || '—');
+                let status = escapeHTML(task.status || 'Не начато');
+                let priority = task.priority || 'Низкий';
+                let comment = escapeHTML(task.comment || '');
+
+                let displayPriority = "🟢 Низкий";
+                if (priority === "Высокий") displayPriority = "🔴 Высокий";
+                else if (priority === "Средний") displayPriority = "🟡 Средний";
+
+                let ownerText = owner;
+                if (ownerTg && ownerTg.startsWith('@') && !owner.includes('@')) {
+                    ownerText = `${owner} (${ownerTg})`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="event-tag" style="background:#555;">${category}</span></td>
+                        <td><b>${name}</b></td>
+                        <td>${ownerText}</td>
+                        <td>${deadline}</td>
+                        <td>${status}</td>
+                        <td>${displayPriority}</td>
+                        <td><input type="text" class="table-comment-input" value="${comment}" onchange="updateTaskComment(${index}, this.value)"></td>
+                        <td style="white-space: nowrap;">
+                            <button class="complete-btn" onclick="archiveTask(${index})" title="Выполнено">✓</button>
+                            <button class="delete-btn" onclick="deleteTask(${index})" title="Удалить">×</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера задач:", err); }
     }
 
     function renderArchivedTasks() {
-        const tbody = document.getElementById('archivedTasksTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
-        if (archivedTasks.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Архив пуст.</td></tr>`;
-            return;
-        }
-        archivedTasks.forEach((task, index) => {
-            tbody.innerHTML += `<tr class="archived-tr">
-                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(task.category)}</span></td>
-                <td><del>${escapeHTML(task.name)}</del></td>
-                <td>${escapeHTML(task.owner)}</td>
-                <td>${escapeHTML(task.deadline)}</td>
-                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateArchiveComment(${index}, this.value)"></td>
-                <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
-            </tr>`;
-        });
+        try {
+            const tbody = document.getElementById('archivedTasksTableBody');
+            if (!tbody) return; 
+            tbody.innerHTML = '';
+
+            if (archivedTasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Архив пуст.</td></tr>`;
+                return;
+            }
+
+            archivedTasks.forEach((task, index) => {
+                if (!task) return;
+                let category = escapeHTML(task.category || 'Организация');
+                let name = escapeHTML(task.name || 'Без названия');
+                let owner = escapeHTML(task.owner || '—');
+                let ownerTg = escapeHTML(task.ownerTg || '');
+                let deadline = escapeHTML(task.deadline || '—');
+                let comment = escapeHTML(task.comment || '');
+
+                tbody.innerHTML += `
+                    <tr class="archived-tr">
+                        <td><span class="event-tag" style="background:#28a745;">${category}</span></td>
+                        <td><del>${name}</del></td>
+                        <td>${owner} (${ownerTg})</td>
+                        <td>${deadline}</td>
+                        <td><input type="text" class="table-comment-input" value="${comment}" onchange="updateArchiveComment(${index}, this.value)"></td>
+                        <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера архива:", err); }
     }
 
     function updateTaskComment(index, val) { if(tasks[index]) { tasks[index].comment = val; saveData(); } }
@@ -513,150 +684,291 @@
     function updateEventComment(index, val) { if(events[index]) { events[index].comment = val; saveData(); } }
 
     function addTask() {
-        const name = document.getElementById('taskName').value.trim();
-        if (!name) return alert("Введите название задачи");
         const category = document.getElementById('taskCategory').value;
-        const ownerInput = document.getElementById('taskOwner').value.trim();
+        const name = document.getElementById('taskName').value.trim();
+        const ownerInput = document.getElementById('taskOwner').value.trim() || 'Не указан';
         const deadline = document.getElementById('taskDeadline').value;
         const status = document.getElementById('taskStatus').value;
         const priority = document.getElementById('taskPriority').value;
         const comment = document.getElementById('taskComment').value.trim();
 
-        const userMapping = resolveTelegramTag(ownerInput);
-        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, status, priority, comment });
-        
-        saveData(); renderTasks();
+        if (!name) return alert("Введите название задачи");
 
-        let message = `📌 НОВАЯ ЗАДАЧА [${category}]\n\nЧто: ${name}\nКто: ${userMapping.tg}\nДедлайн: ${deadline || '—'}`;
+        const userMapping = resolveTelegramTag(ownerInput);
+
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, status, priority, comment });
+        saveAndRender();
+
+        let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
+        let statusIcon = status === "Ожидание" ? "⚠️" : (status === "Готово" ? "✅" : "⏳");
+
+        let message = `📌 НОВАЯ ЗАДАЧА В ЗАКРЕП! [Категория: ${category}]\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline || 'Не указан'}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
+        if(comment) message += `\nЗаметки: ${comment}`;
+        
         sendTelegram(message, true);
 
-        document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskOwner').value = '';
+        document.getElementById('taskComment').value = '';
     }
 
     function archiveTask(index) {
         if(!tasks[index]) return;
-        archivedTasks.push(tasks[index]);
-        sendTelegram(`✅ Выполнено: "${tasks[index].name}"`, false);
+        const completedTask = tasks[index];
+        archivedTasks.push(completedTask);
         tasks.splice(index, 1);
-        saveData(); renderTasks(); renderArchivedTasks();
+        saveAndRender();
+
+        let targetTg = completedTask.ownerTg || completedTask.owner;
+        let message = `✅ ЗАДАЧА УСПЕШНО ВЫПОЛНЕНА И ПЕРЕНЕСЕНА В АРХИВ!\n\n• Категория: ${completedTask.category}\n• Задача: ${completedTask.name}\n• Выполнил: ${targetTg}`;
+        sendTelegram(message, false);
     }
 
     function deleteTask(index) {
-        tasks.splice(index, 1); saveData(); renderTasks();
+        if(!tasks[index]) return;
+        const deleted = tasks[index];
+        tasks.splice(index, 1);
+        saveAndRender();
+        sendTelegram(`🗑 Отменена задача: "${deleted.name}"`, false);
     }
+
     function deleteArchivedTask(index) {
-        archivedTasks.splice(index, 1); saveData(); renderArchivedTasks();
+        if(!archivedTasks[index]) return;
+        archivedTasks.splice(index, 1);
+        saveAndRender();
     }
 
     function renderEvents() {
-        const tbody = document.getElementById('calendarTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
-        events.sort((a, b) => new Date(a.date) - new Date(b.date));
-        events.forEach((ev, index) => {
-            tbody.innerHTML += `<tr>
-                <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
-                <td><b>${escapeHTML(ev.name)}</b></td>
-                <td>${escapeHTML(ev.location)}</td>
-                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
-                <td><button class="delete-btn" onclick="deleteEvent(${index})">×</button></td>
-            </tr>`;
-        });
+        try {
+            const tbody = document.getElementById('calendarTableBody');
+            if (!tbody) return; 
+            tbody.innerHTML = '';
+            
+            if (events.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">Запланированных событий нет.</td></tr>`;
+                return;
+            }
+
+            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            events.forEach((ev, index) => {
+                if (!ev) return;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="event-tag">${escapeHTML(ev.date || '—')}</span></td>
+                        <td><b>${escapeHTML(ev.name || 'Событие')}</b></td>
+                        <td>${escapeHTML(ev.location || '—')}</td>
+                        <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment || '')}" onchange="updateEventComment(${index}, this.value)"></td>
+                        <td><button class="delete-btn" onclick="deleteEvent(${index})">×</button></td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера календаря:", err); }
     }
 
     function addEvent() {
         const name = document.getElementById('eventName').value.trim();
         const date = document.getElementById('eventDate').value;
-        if (!name || !date) return alert("Введите дату и название");
-        events.push({ date, name, location: document.getElementById('eventLocation').value.trim(), comment: document.getElementById('eventComment').value.trim() });
-        saveData(); renderEvents();
-        document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
+        const location = document.getElementById('eventLocation').value.trim() || 'Не указано';
+        const comment = document.getElementById('eventComment').value.trim();
+
+        if (!name || !date) return alert("Введите дату и название события");
+        
+        events.push({ date, name, location, comment });
+        saveAndRender();
+
+        let message = `📅 НОВОЕ МЕРОПРИЯТИЕ ДОБАВЛЕНО В ЗАКРЕП!\n\nСобытие: ${name}\nКогда: ${date}\nГде: ${location}`;
+        if(comment) message += `\nДетали: ${comment}`;
+        
+        sendTelegram(message, true);
+
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventLocation').value = '';
+        document.getElementById('eventComment').value = '';
     }
 
-    function deleteEvent(index) { events.splice(index, 1); saveData(); renderEvents(); }
+    function deleteEvent(index) {
+        if(!events[index]) return;
+        const deleted = events[index];
+        events.splice(index, 1);
+        saveAndRender();
+        sendTelegram(`❌ Мероприятие отменено: "${deleted.name}"`, false);
+    }
 
     function renderFinance() {
-        const tbody = document.getElementById('financeTableBody');
-        if (!tbody) return; tbody.innerHTML = '';
-        let inc = 0, exp = 0;
-        financeTransactions.forEach((item, index) => {
-            const isInc = item.type === "Доход";
-            const amt = Number(item.amount) || 0;
-            if(isInc) inc += amt; else exp += amt;
-            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
-                <td>${escapeHTML(item.date)}</td>
-                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
-                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
-                <td>${escapeHTML(item.desc)}</td>
-                <td>${amt} MDL</td>
-                <td>${escapeHTML(item.user)}</td>
-                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
-            </tr>`;
-        });
-        document.getElementById('totalIncome').innerText = inc + " MDL";
-        document.getElementById('totalExpense').innerText = exp + " MDL";
-        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
+        try {
+            const tbody = document.getElementById('financeTableBody');
+            if (!tbody) return; 
+            tbody.innerHTML = '';
+            
+            let incomeTotal = 0;
+            let expenseTotal = 0;
+
+            if (financeTransactions.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">Транзакции отсутствуют. Бюджет пуст.</td></tr>`;
+                document.getElementById('totalIncome').innerText = "0 MDL";
+                document.getElementById('totalExpense').innerText = "0 MDL";
+                document.getElementById('netBalance').innerText = "0 MDL";
+                return;
+            }
+
+            financeTransactions.forEach((item, index) => {
+                if (!item) return;
+                const isIncome = item.type === "Доход";
+                const rowClass = isIncome ? "income-tr" : "expense-tr";
+                const sign = isIncome ? "+" : "-";
+                const color = isIncome ? "var(--success-color)" : "var(--danger-color)";
+                const amount = Number(item.amount) || 0;
+                const user = escapeHTML(item.user || item.paidBy || 'Общий');
+
+                if(isIncome) incomeTotal += amount;
+                else expenseTotal += amount;
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${escapeHTML(item.date || '—')}</td>
+                        <td style="color: ${color}; font-weight: bold;">${escapeHTML(item.type || 'Расход')}</td>
+                        <td><span class="event-tag" style="background: #444;">${escapeHTML(item.category || 'Другое')}</span></td>
+                        <td>${escapeHTML(item.desc || '—')}</td>
+                        <td style="color: ${color}; font-weight: bold;">${sign} ${amount} MDL</td>
+                        <td>${user}</td>
+                        <td><button class="delete-btn" onclick="deleteFinanceTransaction(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+                    </tr>`;
+            });
+
+            document.getElementById('totalIncome').innerText = incomeTotal + " MDL";
+            document.getElementById('totalExpense').innerText = expenseTotal + " MDL";
+            document.getElementById('netBalance').innerText = (incomeTotal - expenseTotal) + " MDL";
+        } catch(err) { console.error("Ошибка рендера финансов:", err); }
     }
 
     function addFinanceTransaction() {
+        const date = document.getElementById('finDate').value;
+        const type = document.getElementById('finType').value;
+        const category = document.getElementById('finCategory').value;
         const desc = document.getElementById('finDesc').value.trim();
         const amount = document.getElementById('finAmount').value;
-        if (!desc || !amount) return alert("Заполните поля");
-        financeTransactions.push({
-            date: document.getElementById('finDate').value,
-            type: document.getElementById('finType').value,
-            category: document.getElementById('finCategory').value,
-            desc, amount, user: document.getElementById('finUser').value.trim() || 'Общий'
-        });
-        saveData(); renderFinance();
-        document.getElementById('finDesc').value = ''; document.getElementById('finAmount').value = '';
+        const user = document.getElementById('finUser').value.trim() || 'Общий';
+
+        if (!desc || !amount) return alert("Заполните описание транзакции и сумму");
+
+        financeTransactions.push({ date, type, category, desc, amount: Number(amount), user });
+        saveAndRender();
+
+        let icon = type === "Доход" ? "💰" : "💸";
+        let message = `${icon} ФИНАНСЫ: Внесен ${type}\n\nЧто: ${desc}\nКатегория: ${category}\nСумма: ${amount} MDL\nКто: ${user}`;
+        sendTelegram(message, false);
+
+        document.getElementById('finDesc').value = '';
+        document.getElementById('finAmount').value = '';
+        document.getElementById('finUser').value = '';
     }
 
-    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
+    function deleteFinanceTransaction(index) {
+        if(!financeTransactions[index]) return;
+        financeTransactions.splice(index, 1);
+        saveAndRender();
+    }
 
     function loadSettingsInputs() {
-        document.getElementById('cfgTgToken').value = TG_TOKEN;
-        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
+        const tInput = document.getElementById('cfgTgToken');
+        const cInput = document.getElementById('cfgTgChatId');
+        if(tInput) tInput.value = TG_TOKEN;
+        if(cInput) cInput.value = TG_CHAT_ID;
     }
 
     function saveSettings() {
-        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
-        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
-        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
-        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
-        alert("Настройки сохранены!");
+        const token = document.getElementById('cfgTgToken').value.trim();
+        const chatId = document.getElementById('cfgTgChatId').value.trim();
+        if(!token || !chatId) return alert("Заполните настройки!");
+        TG_TOKEN = token;
+        TG_CHAT_ID = chatId;
+        SafeStorage.setItem('inflow_tg_token', token);
+        SafeStorage.setItem('inflow_tg_chat_id', chatId);
+        alert("Конфигурация бота сохранена!");
     }
 
+    // Безопасный кроссплатформенный экспорт (iOS/Windows) через Blobs
     function exportData() {
-        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'inflow_local_backup.json';
-        a.click();
-    }
+        try {
+            const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const fileName = 'inflow_backup_' + dateStr + '.json';
 
-    function resetAllData() {
-        if(confirm("Очистить все локальные данные?")) {
-            SafeStorage.clear();
-            localStorage.removeItem('gdrive_file_id');
-            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
-            renderAllTables();
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = url;
+            downloadAnchor.download = fileName;
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            document.body.removeChild(downloadAnchor);
+            URL.revokeObjectURL(url);
+        } catch(e) {
+            alert("Экспорт не поддерживается на данном типе устройства.");
         }
     }
 
-    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderFinance(); }
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                tasks = Array.isArray(imported.tasks) ? imported.tasks : tasks;
+                archivedTasks = Array.isArray(imported.archivedTasks) ? imported.archivedTasks : archivedTasks;
+                financeTransactions = Array.isArray(imported.financeTransactions) ? imported.financeTransactions : financeTransactions;
+                events = Array.isArray(imported.events) ? imported.events : events;
+                
+                saveAndRender();
+                alert("Данные успешно синхронизированы!");
+            } catch (err) {
+                alert("Некорректный файл бэкапа.");
+            }
+        };
+        reader.readAsText(file);
+    }
 
+    function resetAllData() {
+        if(confirm("Полностью стереть локальный кэш приложения?")) {
+            SafeStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
+            TG_TOKEN = DEFAULT_TG_TOKEN; TG_CHAT_ID = DEFAULT_TG_CHAT_ID;
+            saveAndRender();
+            loadSettingsInputs();
+        }
+    }
+
+    function saveAndRender() {
+        saveData();
+        renderTasks();
+        renderArchivedTasks();
+        renderEvents();
+        renderFinance();
+    }
+
+    // Автоматический подбор локального времени вашего устройства вместо сдвигов UTC
     function initApp() {
         loadLocalStorage();
         loadSettingsInputs();
-        renderAllTables();
-        
-        const todayStr = new Date().toISOString().split('T')[0];
-        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
-        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
-        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+        saveAndRender();
+
+        try {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+            if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+            if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+        } catch(e) {}
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
 </script>
+
 </body>
 </html>
