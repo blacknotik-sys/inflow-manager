@@ -415,7 +415,6 @@
             .then(res => res.json())
             .then(data => {
                 if (data.ok) {
-                    // Закрепляем сообщение только если параметр shouldPin равен true
                     if (shouldPin) {
                         const messageId = data.result.message_id;
                         const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${messageId}&disable_notification=true`;
@@ -518,11 +517,9 @@
         document.getElementById('taskComment').value = '';
     }
 
-    // Завершение задачи (Удаление старого пина + Перенос в архив + Новый отчет БЕЗ ЗАКРЕПЛЕНИЯ)
     function deleteTask(index) {
         const completedTask = tasks[index];
         
-        // 1. Открепляем и удаляем старое уведомление о назначении задачи
         if (completedTask.tgMessageId) {
             const unpinUrl = `https://api.telegram.org/bot${TG_TOKEN}/unpinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${completedTask.tgMessageId}`;
             fetch(unpinUrl).then(() => {
@@ -531,13 +528,11 @@
             }).catch(err => console.error("Ошибка открепления сообщения:", err));
         }
 
-        // 2. Переводим в архив базы данных
         completedTask.status = "Готово";
         archiveTasks.push(completedTask);
         tasks.splice(index, 1);
         saveAndRender();
 
-        // 3. Отправляем финальный отчет. Вторым параметром передаем 'false' — БОТ НЕ БУДЕТ ЗАКРЕПЛЯТЬ ЭТО СООБЩЕНИЕ
         let message = `✅ ЗАДАЧА ВЫПОЛНЕНА И СНЯТА\n\n• Название: ${completedTask.name}\n• Исполнитель: @${completedTask.owner}\n• Была запланирована до: ${completedTask.deadline}`;
         if (completedTask.comment) message += `\n• Комментарий: ${completedTask.comment}`;
         
@@ -712,6 +707,16 @@
         location.reload();
     }
 
+    // Обработчик критического устаревания токена в процессе работы
+    function handleAuthError() {
+        accessToken = null;
+        localStorage.removeItem('inflow_gd_access_token');
+        localStorage.removeItem('inflow_gd_token_expires');
+        document.getElementById('gdStatus').innerText = "🟠 Сессия истекла";
+        document.getElementById('gdStatus').style.color = "#ffcc00";
+        document.getElementById('btnCloudAuth').style.display = 'inline-block';
+    }
+
     function initGoogleDriveClient() {
         const clientId = localStorage.getItem('inflow_gd_client_id');
         if (!clientId || typeof google === 'undefined') return;
@@ -719,4 +724,30 @@
         try {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: clientId,
-                scope: '
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: async (tokenResponse) => {
+                    if (tokenResponse.error !== undefined) {
+                        // Если тихий вход не удался из-за необходимости согласия, возвращаем кнопку
+                        if (tokenResponse.error === 'interaction_required' || tokenResponse.error === 'immediate_failed') {
+                            document.getElementById('gdStatus').innerText = "🟠 Ожидает вход";
+                            document.getElementById('btnCloudAuth').style.display = 'inline-block';
+                            return;
+                        }
+                        console.error("Ошибка Google Auth:", tokenResponse.error);
+                        return;
+                    }
+                    
+                    // Сохраняем токен в кэш браузера на 1 час
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem('inflow_gd_access_token', accessToken);
+                    localStorage.setItem('inflow_gd_token_expires', Date.now() + (tokenResponse.expires_in || 3600) * 1000);
+                    localStorage.setItem('inflow_gd_has_logged_in', 'true'); // флаг успешного входа
+                    
+                    document.getElementById('gdStatus').innerText = "🔄 Синхронизация...";
+                    document.getElementById('gdStatus').style.color = "#ffcc00";
+                    document.getElementById('btnCloudAuth').style.display = 'none';
+                    await startCloudSync();
+                },
+            });
+
+            // ПРОВЕРКА ПРИ ПЕРЕЗАГРУЗКЕ СТРАНИ
