@@ -337,11 +337,10 @@
 </div>
 
 <script>
-    // Конфигурация Telegram (ваши действующие данные)
+    // Конфигурация Telegram
     const TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
     const TG_CHAT_ID = "-1002074840667";
 
-    // Переменные Google облака
     let tokenClient = null;
     let accessToken = null;
     let gdFileId = null;
@@ -359,7 +358,6 @@
             .catch(err => console.error("Ошибка сети Telegram:", err));
     }
 
-    // Загрузка данных из локальной памяти
     let tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
     let expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
     let events = JSON.parse(localStorage.getItem('inflow_events')) || [];
@@ -369,7 +367,6 @@
         localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
         localStorage.setItem('inflow_events', JSON.stringify(events));
 
-        // Если выполнена авторизация в облаке, сохраняем и туда тоже
         if (accessToken && gdFileId) {
             updateCloudFile();
         }
@@ -550,7 +547,7 @@
         renderExpenses();
     }
 
-    // --- НАСТРОЙКИ И ОБЛАКО (GOOGLE DRIVE API) ---
+    // --- НАСТРОЙКИ И GOOGLE DRIVE ---
     function loadConfig() {
         const cid = localStorage.getItem('inflow_gd_client_id') || '';
         document.getElementById('cfgGdClientId').value = cid;
@@ -672,7 +669,6 @@
         }).catch(err => console.error("Ошибка автосохранения в облако:", err));
     }
 
-    // Запуск при загрузке страницы
     window.onload = function() {
         loadConfig();
         saveAndRender();
