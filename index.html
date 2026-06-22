@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InFlow Band Manager (Archive & Categories Edition)</title>
+    <title>InFlow Band Manager (Ultimate Stabilized)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -104,7 +104,8 @@
 
         .form-group input[placeholder="Задача"], 
         .form-group input[placeholder="Заметки"],
-        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] {
+        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"],
+        .cfg-input {
             flex: 2 1 220px;
         }
 
@@ -225,6 +226,31 @@
         .archived-tr {
             opacity: 0.6;
         }
+
+        .settings-card {
+            background: rgba(255,255,255,0.02);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .settings-card label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .settings-card input {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            margin-top: 5px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -238,6 +264,7 @@
         <button class="tab-btn active" onclick="switchTab('tasks', this)">Задачи и Сроки</button>
         <button class="tab-btn" onclick="switchTab('calendar', this)">Календарь</button>
         <button class="tab-btn" onclick="switchTab('expenses', this)">Учет Расходов</button>
+        <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки и Синхронизация</button>
     </div>
 
     <div id="tasks" class="tab-content active">
@@ -357,83 +384,40 @@
         </table>
         <div class="total-box">Всего потрачено: <span id="totalAmount">0</span> MDL</div>
     </div>
+
+    <div id="settings" class="tab-content">
+        <h2>Настройки системы и Синхронизация</h2>
+        
+        <div class="settings-card">
+            <h3>🔔 Уведомления Telegram Bot</h3>
+            <label>
+                Токен Бота (Bot Token):
+                <input type="text" id="cfgTgToken">
+            </label>
+            <label>
+                ID Чата / Группы (Chat ID):
+                <input type="text" id="cfgTgChatId">
+            </label>
+            <button class="tab-btn" style="background: var(--accent-color); border: none;" onclick="saveSettings()">Сохранить настройки Telegram</button>
+        </div>
+
+        <div class="settings-card">
+            <h3>🔄 Резервное копирование и Обмен данными</h3>
+            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">Вы можете выгрузить все данные в один файл для бэкапа или перенести их на другое устройство (синхронизировать).</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="tab-btn" onclick="exportData()">📥 Экспорт данных (Скачать файл)</button>
+                <button class="tab-btn" onclick="document.getElementById('importFile').click()">📤 Импорт данных (Выбрать файл)</button>
+                <input type="file" id="importFile" style="display: none;" onchange="importData(this)">
+                <button class="delete-btn" style="padding: 12px 24px;" onclick="resetAllData()">⚠️ Сбросить всё</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Конфигурация Telegram 
-    const TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
-    const TG_CHAT_ID = "-1002074840667";
+    // Дефолтные конфигурации Telegram
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
 
-    function sendTelegram(text) {
-        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
-        fetch(url)
-            .then(res => { 
-                if(!res.ok) {
-                    res.json().then(errData => {
-                        console.error("Telegram API Error:", errData.description);
-                    });
-                } 
-            })
-            .catch(err => console.error("Ошибка отправки в Telegram:", err));
-    }
-
-    // Безопасная инициализация массивов данных
-    let tasks = [];
-    let archivedTasks = [];
-    let expenses = [];
-    let events = [];
-
-    try {
-        tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
-        archivedTasks = JSON.parse(localStorage.getItem('inflow_archived_tasks')) || [];
-        expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
-        events = JSON.parse(localStorage.getItem('inflow_events')) || [];
-    } catch (e) {
-        console.warn("Ошибка чтения кэша браузера. Структура очищена для стабильности.", e);
-    }
-
-    function saveData() {
-        try {
-            localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-            localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
-            localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
-            localStorage.setItem('inflow_events', JSON.stringify(events));
-        } catch(e) {
-            console.error("Критическая ошибка записи данных:", e);
-        }
-    }
-
-    function switchTab(tabId, btnElement) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        if (btnElement) btnElement.classList.add('active');
-    }
-
-    // Авто-маппинг участников группы и их тегов
-    function resolveTelegramTag(ownerName) {
-        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
-        const lowerName = String(ownerName).trim().toLowerCase();
-        
-        if (lowerName === 'таня' || lowerName === 'татьяна') {
-            return { display: 'Таня', tg: '@anghel_tatiana' };
-        }
-        if (lowerName === 'андрей') {
-            return { display: 'Андрей', tg: '@guitaristishe' };
-        }
-        if (lowerName === 'серж' || lowerName === 'сергей' || lowerName === 'серега' || lowerName === 'серёга') {
-            return { display: 'Серж', tg: '@Serjblacknote' };
-        }
-        return { display: ownerName, tg: ownerName };
-    }
-
-    // --- УПРАВЛЕНИЕ ЗАДАЧАМИ ---
-    function renderTasks() {
-        const tbody = document.getElementById('tasksTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        tasks.forEach((task, index) => {
-            let displayPriority = task.priority;
-            if (task.priority === "Высокий") displayPriority = "🔴 Высокий";
-            else if (task.priority === "Средний") displayPriority = "🟡 Средний";
+    let TG_TOKEN = localStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = localStorage.getItem('inflow_tg_chat_id') ||
