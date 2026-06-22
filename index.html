@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InFlow Band Manager (Fix Edition)</title>
+    <title>InFlow Band Manager (Stabilized Edition)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -80,9 +80,10 @@
             display: block;
         }
 
+        /* Гибкая и стабильная форма ввода вместо жесткого Grid */
         .form-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
             background: rgba(255,255,255,0.02);
@@ -91,28 +92,41 @@
             border: 1px solid var(--border-color);
         }
 
-        input, select, button {
+        .form-group input, .form-group select {
+            flex: 1 1 160px;
+            min-width: 130px;
             padding: 10px;
             background: #2a2a2a;
             border: 1px solid var(--border-color);
             color: #fff;
             border-radius: 4px;
+            box-sizing: border-box;
         }
 
-        input:focus, select:focus {
-            outline: 1px solid var(--accent-color);
+        /* Увеличенная зона для заметок и названий */
+        .form-group input[placeholder="Задача"], 
+        .form-group input[placeholder="Заметки"],
+        .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] {
+            flex: 2 1 250px;
         }
 
-        button.add-btn {
+        .form-group button.add-btn {
+            flex: 0 0 60px;
             background: var(--accent-color);
             color: #fff;
             font-weight: bold;
             cursor: pointer;
             border: none;
+            border-radius: 4px;
+            padding: 10px;
         }
 
-        button.add-btn:hover {
+        .form-group button.add-btn:hover {
             background: #e02253;
+        }
+
+        input:focus, select:focus {
+            outline: 1px solid var(--accent-color);
         }
 
         table {
@@ -202,7 +216,7 @@
 
     <div id="tasks" class="tab-content active">
         <h2>Менеджер задач</h2>
-        <div class="form-group" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) 2fr 80px;">
+        <div class="form-group">
             <input type="text" id="taskName" placeholder="Задача">
             <input type="text" id="taskOwner" placeholder="Кто делает">
             <input type="date" id="taskDeadline">
@@ -238,7 +252,7 @@
 
     <div id="calendar" class="tab-content">
         <h2>Календарь мероприятий</h2>
-        <div class="form-group" style="grid-template-columns: 150px 1fr 1fr 2fr 80px;">
+        <div class="form-group">
             <input type="date" id="eventDate">
             <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
             <input type="text" id="eventLocation" placeholder="Место / Клуб">
@@ -298,32 +312,46 @@
     const TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
     const TG_CHAT_ID = "-1002074840667";
 
-    // Упрощенная и безопасная функция отправки
     function sendTelegram(text) {
         const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
         fetch(url)
             .then(res => { 
                 if(!res.ok) {
                     res.json().then(errData => {
-                        alert("Ошибка Telegram API: " + errData.description + "\n\nУбедитесь, что бот запущен лично вами и добавлен в группу как админ.");
+                        console.error("Telegram API Error:", errData.description);
                     });
                 } 
             })
-            .catch(err => alert("Ошибка сети: не удалось отправить запрос в Telegram. Проверьте интернет."));
+            .catch(err => console.error("Ошибка отправки уведомления в Telegram:", err));
     }
 
-    // Загрузка данных
-    let tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
-    let expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
-    let events = JSON.parse(localStorage.getItem('inflow_events')) || [];
+    // Безопасная загрузка данных с защитой от повреждений JSON
+    let tasks = [];
+    let expenses = [];
+    let events = [];
+
+    try {
+        tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
+        expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
+        events = JSON.parse(localStorage.getItem('inflow_events')) || [];
+    } catch (e) {
+        console.warn("Обнаружена ошибка в сохраненных данных LocalStorage. Память очищена для стабильной работы.", e);
+        tasks = [];
+        expenses = [];
+        events = [];
+    }
 
     function saveData() {
-        localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-        localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
-        localStorage.setItem('inflow_events', JSON.stringify(events));
+        try {
+            localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+            localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
+            localStorage.setItem('inflow_events', JSON.stringify(events));
+        } catch(e) {
+            console.error("Не удалось сохранить данные в LocalStorage:", e);
+        }
     }
 
-    // Исправленное переключение вкладок без ошибок в строгом режиме
+    // Переключение вкладок
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -333,11 +361,11 @@
         }
     }
 
-    // Автоматическое сопоставление имён и тегов пользователей
+    // Авто-маппинг участников и их тегов
     function resolveTelegramTag(ownerName) {
         if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
         
-        const lowerName = ownerName.trim().toLowerCase();
+        const lowerName = String(ownerName).trim().toLowerCase();
         
         if (lowerName === 'таня' || lowerName === 'татьяна') {
             return { display: 'Таня', tg: '@anghel_tatiana' };
@@ -349,13 +377,13 @@
             return { display: 'Серж', tg: '@Serjblacknote' };
         }
         
-        // Если имя не совпало, оставляем оригинальный текст
         return { display: ownerName, tg: ownerName };
     }
 
     // --- ЛОГИКА ЗАДАЧ ---
     function renderTasks() {
         const tbody = document.getElementById('tasksTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         tasks.forEach((task, index) => {
             let displayPriority = task.priority;
@@ -363,7 +391,6 @@
             else if (task.priority === "Средний") displayPriority = "🟡 Средний";
             else if (task.priority === "Низкий") displayPriority = "🟢 Низкий";
 
-            // Форматирование вывода имени с тегом для таблицы задач
             let ownerText = task.owner;
             if (task.ownerTg && task.ownerTg.startsWith('@') && !task.owner.includes('@')) {
                 ownerText = `${task.owner} (${task.ownerTg})`;
@@ -373,7 +400,7 @@
                 <tr>
                     <td><b>${task.name}</b></td>
                     <td>${ownerText}</td>
-                    <td>${task.deadline}</td>
+                    <td>${task.deadline || '—'}</td>
                     <td>${task.status}</td>
                     <td>${displayPriority}</td>
                     <td><div class="comment-cell" contenteditable="true" onblur="updateTaskComment(${index}, this)">${task.comment || ''}</div></td>
@@ -383,21 +410,22 @@
     }
 
     function updateTaskComment(index, el) {
-        tasks[index].comment = el.innerText;
-        saveData();
+        if(tasks[index]) {
+            tasks[index].comment = el.innerText;
+            saveData();
+        }
     }
 
     function addTask() {
-        const name = document.getElementById('taskName').value;
-        const ownerInput = document.getElementById('taskOwner').value || 'Не указан';
+        const name = document.getElementById('taskName').value.trim();
+        const ownerInput = document.getElementById('taskOwner').value.trim() || 'Не указан';
         const deadline = document.getElementById('taskDeadline').value;
         const status = document.getElementById('taskStatus').value;
         const priority = document.getElementById('taskPriority').value;
-        const comment = document.getElementById('taskComment').value;
+        const comment = document.getElementById('taskComment').value.trim();
 
         if (!name) return alert("Введите название задачи");
 
-        // Определяем маппинг на теги
         const userMapping = resolveTelegramTag(ownerInput);
 
         tasks.push({ 
@@ -414,7 +442,7 @@
         let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
         let statusIcon = status === "Ожидание" ? "⚠️" : (status === "Готово" ? "✅" : "⏳");
 
-        let message = `📝 Добавлена новая задача!\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
+        let message = `📝 Добавлена новая задача!\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline || 'Не указан'}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
         if(comment) message += `\nЗаметка: ${comment}`;
         sendTelegram(message);
 
@@ -424,6 +452,7 @@
     }
 
     function deleteTask(index) {
+        if(!tasks[index]) return;
         const completedTask = tasks[index];
         tasks.splice(index, 1);
         saveAndRender();
@@ -431,7 +460,7 @@
         let priorityIcon = completedTask.priority === "Высокий" ? "🔴" : (completedTask.priority === "Средний" ? "🟡" : "🟢");
         let targetTg = completedTask.ownerTg || completedTask.owner;
 
-        let message = `✅ ЗАДАЧА УСПЕШНО ЗАВЕРШЕНА!\n\n• Название: ${completedTask.name}\n• Исполнитель: ${targetTg}\n• Была запланирована до: ${completedTask.deadline}\n• Приоритет: ${priorityIcon} ${completedTask.priority}`;
+        let message = `✅ ЗАДАЧА УСПЕШНО ЗАВЕРШЕНА!\n\n• Название: ${completedTask.name}\n• Исполнитель: ${targetTg}\n• Была запланирована до: ${completedTask.deadline || '—'}\n• Приоритет: ${priorityIcon} ${completedTask.priority}`;
         if(completedTask.comment) message += `\n• Финальные заметки: ${completedTask.comment}`;
         
         sendTelegram(message);
@@ -440,12 +469,13 @@
     // --- ЛОГИКА КАЛЕНДАРЯ ---
     function renderEvents() {
         const tbody = document.getElementById('calendarTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
         events.forEach((ev, index) => {
             tbody.innerHTML += `
                 <tr>
-                    <td><span class="event-tag">${ev.date}</span></td>
+                    <td><span class="event-tag">${ev.date || '—'}</span></td>
                     <td><b>${ev.name}</b></td>
                     <td>${ev.location}</td>
                     <td><div class="comment-cell" contenteditable="true" onblur="updateEventComment(${index}, this)">${ev.comment || ''}</div></td>
@@ -455,15 +485,17 @@
     }
 
     function updateEventComment(index, el) {
-        events[index].comment = el.innerText;
-        saveData();
+        if(events[index]) {
+            events[index].comment = el.innerText;
+            saveData();
+        }
     }
 
     function addEvent() {
-        const name = document.getElementById('eventName').value;
+        const name = document.getElementById('eventName').value.trim();
         const date = document.getElementById('eventDate').value;
-        const location = document.getElementById('eventLocation').value || 'Не указано';
-        const comment = document.getElementById('eventComment').value;
+        const location = document.getElementById('eventLocation').value.trim() || 'Не указано';
+        const comment = document.getElementById('eventComment').value.trim();
 
         if (!name || !date) return alert("Введите дату и название события");
         
@@ -480,6 +512,7 @@
     }
 
     function deleteEvent(index) {
+        if(!events[index]) return;
         const deleted = events[index];
         events.splice(index, 1);
         saveAndRender();
@@ -489,64 +522,16 @@
     // --- ЛОГИКА РАСХОДОВ ---
     function renderExpenses() {
         const tbody = document.getElementById('expensesTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         let total = 0;
         expenses.forEach((exp, index) => {
-            total += Number(exp.amount);
+            total += Number(exp.amount || 0);
             tbody.innerHTML += `
                 <tr>
-                    <td>${exp.date}</td>
+                    <td>${exp.date || '—'}</td>
                     <td>${exp.category}</td>
                     <td>${exp.desc}</td>
                     <td>${exp.amount} MDL</td>
                     <td>${exp.paidBy}</td>
-                    <td><button class="delete-btn" onclick="deleteExpense(${index})">×</button></td>
-                </tr>`;
-        });
-        document.getElementById('totalAmount').innerText = total;
-    }
-
-    // Функция добавления расхода
-    function addExpense() {
-        const date = document.getElementById('expDate').value;
-        const category = document.getElementById('expCategory').value;
-        const desc = document.getElementById('expDesc').value;
-        const amount = document.getElementById('expAmount').value;
-        const paidBy = document.getElementById('expPaidBy').value || 'Общий бюджет';
-
-        if (!desc || !amount) return alert("Заполните описание и сумму");
-
-        expenses.push({ date, category, desc, amount: Number(amount), paidBy });
-        saveAndRender();
-
-        let message = `Зафиксирован расход группы!\n\nЧто: ${desc}\nКатегория: ${category}\nСумма: ${amount} MDL\nКто внес: ${paidBy}\nДата: ${date}`;
-        sendTelegram(message);
-
-        document.getElementById('expDesc').value = '';
-        document.getElementById('expAmount').value = '';
-        document.getElementById('expPaidBy').value = '';
-    }
-
-    function deleteExpense(index) {
-        const deleted = expenses[index];
-        expenses.splice(index, 1);
-        saveAndRender();
-        sendTelegram(`Расход удален: "${deleted.desc}" на сумму ${deleted.amount} MDL`);
-    }
-
-    function saveAndRender() {
-        saveData();
-        renderTasks();
-        renderEvents();
-        renderExpenses();
-    }
-
-    // Инициализация при загрузке страницы
-    saveAndRender();
-    document.getElementById('taskDeadline').valueAsDate = new Date();
-    document.getElementById('expDate').valueAsDate = new Date();
-    document.getElementById('eventDate').valueAsDate = new Date();
-</script>
-
-</body>
-</html>
+                    <td>
