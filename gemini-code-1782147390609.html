@@ -10,9 +10,9 @@
             --bg-color: #121212;
             --panel-bg: #1e1e1e;
             --accent-color: #ff3366;
-            --success-color: #00cc66;
             --text-color: #e0e0e0;
             --border-color: #333;
+            --success-color: #00cc66;
         }
 
         body {
@@ -51,11 +51,11 @@
         }
 
         .cloud-bar {
-            background: #252525;
+            background: #1e1e1e;
             padding: 8px 15px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 0.9rem;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 10px;
             border: 1px solid var(--border-color);
@@ -67,6 +67,8 @@
             background: var(--accent-color);
             border: none;
             cursor: pointer;
+            color: #fff;
+            border-radius: 3px;
         }
 
         .tabs {
@@ -107,7 +109,7 @@
 
         .form-group {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
             background: rgba(255,255,255,0.02);
@@ -122,7 +124,6 @@
             border: 1px solid var(--border-color);
             color: #fff;
             border-radius: 4px;
-            font-size: 0.95rem;
         }
 
         input:focus, select:focus {
@@ -183,7 +184,7 @@
             background: #cc0000;
             color: #fff;
             border: none;
-            padding: 6px 10px;
+            padding: 5px 10px;
             cursor: pointer;
             border-radius: 3px;
         }
@@ -192,36 +193,17 @@
             background: #ff0000;
         }
 
-        .archive-btn {
-            background: var(--success-color);
-            color: #fff;
-            border: none;
-            padding: 6px 12px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-
-        .archive-btn:hover {
-            background: #00ff7f;
-        }
-
-        .finance-summary {
+        .total-box {
             margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 30px;
+            text-align: right;
             font-size: 1.2rem;
             font-weight: bold;
-            flex-wrap: wrap;
-            background: rgba(0,0,0,0.2);
-            padding: 15px;
-            border-radius: 6px;
+            color: #fff;
         }
         
-        .finance-summary span.plus { color: var(--success-color); }
-        .finance-summary span.minus { color: var(--accent-color); }
-        .finance-summary span.neutral { color: #fff; }
+        .total-box span {
+            color: var(--accent-color);
+        }
 
         .event-tag {
             font-size: 0.8rem;
@@ -229,30 +211,6 @@
             border-radius: 3px;
             background: #444;
             color: #fff;
-        }
-
-        .row-income { background: rgba(0, 204, 102, 0.03); }
-        .row-expense { background: rgba(255, 33, 102, 0.03); }
-
-        select.inline-select {
-            background: transparent;
-            border: 1px dashed #555;
-            padding: 4px;
-            font-size: 0.9rem;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; }
-            thead { display: none; }
-            tr { margin-bottom: 15px; border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; background: #1a1a1a;}
-            td { text-align: right; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; display: flex; justify-content: space-between; align-items: center; }
-            td:last-child { border-bottom: none; justify-content: center; padding-top: 12px; }
-            td::before { content: attr(data-label); font-weight: bold; color: var(--accent-color); text-align: left; padding-right: 10px; }
-            .comment-cell { width: 60%; text-align: left; }
-            .form-group { grid-template-columns: 1fr !important; }
-            header { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
@@ -268,10 +226,9 @@
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tasks')">Задачи</button>
-        <button class="tab-btn" onclick="switchTab('taskArchive')">Архив Задач</button>
+        <button class="tab-btn active" onclick="switchTab('tasks')">Задачи и Сроки</button>
         <button class="tab-btn" onclick="switchTab('calendar')">Календарь</button>
-        <button class="tab-btn" onclick="switchTab('finance')">Финансы</button>
+        <button class="tab-btn" onclick="switchTab('expenses')">Учет Расходов</button>
         <button class="tab-btn" onclick="switchTab('settings')">⚙️ Настройки</button>
     </div>
 
@@ -285,7 +242,7 @@
                 <option value="Не начато">Не начато</option>
                 <option value="В процессе">В процессе</option>
                 <option value="Ожидание">Ожидание</option>
-                <option value="Выполнено">Выполнено</option>
+                <option value="Готово">Готово</option>
             </select>
             <select id="taskPriority">
                 <option value="Низкий">Низкий</option>
@@ -301,29 +258,13 @@
                     <th style="width: 20%;">Задача</th>
                     <th style="width: 12%;">Кто</th>
                     <th style="width: 12%;">Дедлайн</th>
-                    <th style="width: 14%;">Статус</th>
-                    <th style="width: 12%;">Приоритет</th>
-                    <th style="width: 20%;">Комментарий</th>
-                    <th style="width: 10%;">Действия</th>
+                    <th style="width: 12%;">Статус</th>
+                    <th style="width: 10%;">Приоритет</th>
+                    <th style="width: 26%;">Комментарий</th>
+                    <th style="width: 8%;"></th>
                 </tr>
             </thead>
             <tbody id="tasksTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="taskArchive" class="tab-content">
-        <h2>Архив выполненных задач</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Задача</th>
-                    <th style="width: 15%;">Кто делал</th>
-                    <th style="width: 15%;">Дедлайн</th>
-                    <th style="width: 35%;">Финальный комментарий</th>
-                    <th style="width: 10%;">Удалить</th>
-                </tr>
-            </thead>
-            <tbody id="archiveTableBody"></tbody>
         </table>
     </div>
 
@@ -350,96 +291,85 @@
         </table>
     </div>
 
-    <div id="finance" class="tab-content">
-        <h2>Контроль бюджета (Доходы и Расходы)</h2>
+    <div id="expenses" class="tab-content">
+        <h2>Контроль бюджета</h2>
         <div class="form-group">
-            <input type="date" id="finDate">
-            <select id="finType" onchange="toggleFinanceCategories()">
-                <option value="Расход">Расход 🔻</option>
-                <option value="Доход">Доход 🔺</option>
+            <input type="date" id="expDate">
+            <select id="expCategory">
+                <option value="Маркетинг">Маркетинг</option>
+                <option value="Продвижение">Продвижение</option>
+                <option value="Студия">Студия</option>
+                <option value="Оборудование">Оборудование</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Другое">Другое</option>
             </select>
-            <select id="finCategory">
-                </select>
-            <input type="text" id="finDesc" placeholder="Описание">
-            <input type="number" id="finAmount" placeholder="Сумма (MDL)">
-            <input type="text" id="finPaidBy" placeholder="Кто / Откуда">
-            <button class="add-btn" onclick="addFinanceRecord()">+</button>
+            <input type="text" id="expDesc" placeholder="Описание">
+            <input type="number" id="expAmount" placeholder="Сумма (MDL)">
+            <input type="text" id="expPaidBy" placeholder="Кто оплатил">
+            <button class="add-btn" onclick="addExpense()">+</button>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Дата</th>
-                    <th>Тип</th>
                     <th>Категория</th>
                     <th>Описание</th>
                     <th>Сумма</th>
-                    <th>Участник</th>
+                    <th>Кто оплатил</th>
                     <th></th>
                 </tr>
             </thead>
-            <tbody id="financeTableBody"></tbody>
+            <tbody id="expensesTableBody"></tbody>
         </table>
-        <div class="finance-summary">
-            <div>Заработано: <span id="totalIncome" class="plus">0</span> MDL</div>
-            <div>Потрачено: <span id="totalExpenses" class="minus">0</span> MDL</div>
-            <div>Баланс: <span id="netBalance" class="neutral">0</span> MDL</div>
-        </div>
+        <div class="total-box">Всего потрачено: <span id="totalAmount">0</span> MDL</div>
     </div>
 
     <div id="settings" class="tab-content">
-        <h2>Настройки конфигурации</h2>
-        <p style="color: #aaa; font-size: 0.95rem;">Данные сохраняются локально в вашем браузере и синхронизируются с вашим Google Диском.</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 500px; margin-top: 20px;">
-            <fieldset style="border: 1px solid var(--border-color); padding: 15px; border-radius: 4px;">
-                <legend style="color: var(--accent-color); padding: 0 5px; font-weight: bold;">Telegram оповещения</legend>
-                <label style="display:block; margin-bottom:10px;"><strong>TG Bot Token:</strong>
-                    <input type="password" id="cfgToken" style="width: 100%; margin-top: 5px;" placeholder="Вставьте токен вашего бота">
-                </label>
-                <label><strong>TG Chat ID:</strong>
-                    <input type="text" id="cfgChatId" style="width: 100%; margin-top: 5px;" placeholder="Вставьте ID чата или группы">
-                </label>
-            </fieldset>
-
-            <fieldset style="border: 1px solid var(--border-color); padding: 15px; border-radius: 4px;">
-                <legend style="color: #00cc66; padding: 0 5px; font-weight: bold;">Синхронизация Google Диск</legend>
-                <label><strong>Google Client ID:</strong>
-                    <input type="text" id="cfgGdClientId" style="width: 100%; margin-top: 5px;" placeholder="Вставьте ваш OAuth Client ID">
-                </label>
-            </fieldset>
-
-            <button class="add-btn" style="padding: 12px;" onclick="saveConfig()">Сохранить настройки</button>
+        <h2>Настройки облачной синхронизации</h2>
+        <p style="color: #aaa; font-size: 0.95rem;">Для работы общего доступа со всех устройств укажите ваш идентификатор приложения Google.</p>
+        <div style="display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin-top: 20px;">
+            <label><strong>Google OAuth Client ID:</strong>
+                <input type="text" id="cfgGdClientId" style="width: 100%; margin-top: 5px;" placeholder="Вставьте ваш Client ID из Google Console">
+            </label>
+            <button class="add-btn" style="padding: 12px; width: 200px;" onclick="saveConfig()">Сохранить и применить</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Глобальные облачные переменные
+    // Конфигурация Telegram (ваши действующие данные)
+    const TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const TG_CHAT_ID = "-1002074840667";
+
+    // Переменные Google облака
     let tokenClient = null;
     let accessToken = null;
     let gdFileId = null;
 
     function sendTelegram(text) {
-        const token = localStorage.getItem('inflow_tg_token') || '';
-        const chatId = localStorage.getItem('inflow_tg_chat_id') || '';
-        if (!token || !chatId) return;
-        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
-        fetch(url).catch(err => console.error("Telegram Error:", err));
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+        fetch(url)
+            .then(res => { 
+                if(!res.ok) {
+                    res.json().then(errData => {
+                        alert("Ошибка Telegram API: " + errData.description);
+                    });
+                } 
+            })
+            .catch(err => console.error("Ошибка сети Telegram:", err));
     }
 
-    // Инициализация массивов данных
+    // Загрузка данных из локальной памяти
     let tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
-    let archivedTasks = JSON.parse(localStorage.getItem('inflow_archived_tasks')) || [];
+    let expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
     let events = JSON.parse(localStorage.getItem('inflow_events')) || [];
-    let financeRecords = JSON.parse(localStorage.getItem('inflow_finance')) || [];
 
-    // Сохранение данных (и локально, и в облако, если подключено)
     function saveData() {
         localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-        localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
         localStorage.setItem('inflow_events', JSON.stringify(events));
-        localStorage.setItem('inflow_finance', JSON.stringify(financeRecords));
 
+        // Если выполнена авторизация в облаке, сохраняем и туда тоже
         if (accessToken && gdFileId) {
             updateCloudFile();
         }
@@ -449,23 +379,7 @@
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        if (event && event.currentTarget) event.currentTarget.classList.add('active');
-    }
-
-    const categoriesConfig = {
-        'Расход': ['Репетиции', 'Студия', 'Оборудование', 'Маркетинг', 'Продвижение', 'Другое'],
-        'Доход': ['Концерты', 'Мерч', 'Стриминг', 'Донаты', 'Продажа прав', 'Другое']
-    };
-
-    function toggleFinanceCategories() {
-        const type = document.getElementById('finType').value;
-        const categorySelect = document.getElementById('finCategory');
-        categorySelect.innerHTML = '';
-        categoriesConfig[type].forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat; opt.textContent = cat;
-            categorySelect.appendChild(opt);
-        });
+        if(window.event) window.event.currentTarget.classList.add('active');
     }
 
     // --- ЛОГИКА ЗАДАЧ ---
@@ -473,35 +387,28 @@
         const tbody = document.getElementById('tasksTableBody');
         tbody.innerHTML = '';
         tasks.forEach((task, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Задача"><b>${task.name}</b></td>
-                <td data-label="Кто">${task.owner}</td>
-                <td data-label="Дедлайн">${task.deadline}</td>
-                <td data-label="Статус">
-                    <select class="inline-select" onchange="updateTaskInline(${index}, 'status', this.value)">
-                        <option value="Не начато" ${task.status === 'Не начато' ? 'selected' : ''}>Не начато</option>
-                        <option value="В процессе" ${task.status === 'В процессе' ? 'selected' : ''}>В процессе</option>
-                        <option value="Ожидание" ${task.status === 'Ожидание' ? 'selected' : ''}>Ожидание</option>
-                        <option value="Выполнено" ${task.status === 'Выполнено' ? 'selected' : ''}>Выполнено</option>
-                    </select>
-                </td>
-                <td data-label="Приоритет">
-                    <select class="inline-select" onchange="updateTaskInline(${index}, 'priority', this.value)">
-                        <option value="Низкий" ${task.priority === 'Низкий' ? 'selected' : ''}>🟢 Низкий</option>
-                        <option value="Средний" ${task.priority === 'Средний' ? 'selected' : ''}>🟡 Средний</option>
-                        <option value="Высокий" ${task.priority === 'Высокий' ? 'selected' : ''}>🔴 Высокий</option>
-                    </select>
-                </td>
-                <td data-label="Комментарий"><div class="comment-cell" contenteditable="true" onblur="updateTaskComment(${index}, this)">${task.comment || ''}</div></td>
-                <td data-label="Действия"><button class="archive-btn" onclick="archiveTask(${index})">📥 Выполнено</button></td>
-            `;
-            tbody.appendChild(tr);
+            let displayPriority = task.priority;
+            if (task.priority === "Высокий") displayPriority = "🔴 Высокий";
+            else if (task.priority === "Средний") displayPriority = "🟡 Средний";
+            else if (task.priority === "Низкий") displayPriority = "🟢 Низкий";
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${task.name}</b></td>
+                    <td>${task.owner}</td>
+                    <td>${task.deadline}</td>
+                    <td>${task.status}</td>
+                    <td>${displayPriority}</td>
+                    <td><div class="comment-cell" contenteditable="true" onblur="updateTaskComment(${index}, this)">${task.comment || ''}</div></td>
+                    <td><button class="delete-btn" onclick="deleteTask(${index})">×</button></td>
+                </tr>`;
         });
     }
 
-    function updateTaskInline(index, field, value) { tasks[index][field] = value; saveData(); }
-    function updateTaskComment(index, el) { tasks[index].comment = el.innerText; saveData(); }
+    function updateTaskComment(index, el) {
+        tasks[index].comment = el.innerText;
+        saveData();
+    }
 
     function addTask() {
         const name = document.getElementById('taskName').value;
@@ -510,48 +417,34 @@
         const status = document.getElementById('taskStatus').value;
         const priority = document.getElementById('taskPriority').value;
         const comment = document.getElementById('taskComment').value;
+
         if (!name) return alert("Введите название задачи");
 
         tasks.push({ name, owner, deadline, status, priority, comment });
         saveAndRender();
 
-        let pIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
-        let message = `📝 Добавлена новая задача!\n\nЧто: ${name}\nКто: ${owner}\nДедлайн: ${deadline}\nПриоритет: ${pIcon} ${priority}`;
+        let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
+        let statusIcon = status === "Ожидание" ? "⚠️" : (status === "Готово" ? "✅" : "⏳");
+
+        let message = `📝 Добавлена новая задача!\n\nЧто: ${name}\nКто делает: ${owner}\nДедлайн: ${deadline}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
         if(comment) message += `\nЗаметка: ${comment}`;
         sendTelegram(message);
-        document.getElementById('taskName').value = ''; document.getElementById('taskComment').value = '';
+
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskComment').value = '';
     }
 
-    function archiveTask(index) {
+    function deleteTask(index) {
         const completedTask = tasks[index];
-        completedTask.status = "Выполнено";
-        archivedTasks.push(completedTask);
         tasks.splice(index, 1);
         saveAndRender();
 
-        let pIcon = completedTask.priority === "Высокий" ? "🔴" : (completedTask.priority === "Средний" ? "🟡" : "🟢");
-        let message = `✅ ЗАДАЧА ВЫПОЛНЕНА И ПЕРЕНЕСЕНА В АРХИВ!\n\n• Название: ${completedTask.name}\n• Исполнитель: ${completedTask.owner}\n• Приоритет: ${pIcon} ${completedTask.priority}`;
+        let priorityIcon = completedTask.priority === "Высокий" ? "🔴" : (completedTask.priority === "Средний" ? "🟡" : "🟢");
+
+        let message = `✅ ЗАДАЧА УСПЕШНО ЗАВЕРШЕНА!\n\n• Название: ${completedTask.name}\n• Исполнитель: ${completedTask.owner}\n• Была запланирована до: ${completedTask.deadline}\n• Приоритет: ${priorityIcon} ${completedTask.priority}`;
+        if(completedTask.comment) message += `\n• Финальные заметки: ${completedTask.comment}`;
+        
         sendTelegram(message);
-    }
-
-    function renderArchive() {
-        const tbody = document.getElementById('archiveTableBody');
-        tbody.innerHTML = '';
-        archivedTasks.forEach((task, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Задача"><s>${task.name}</s></td>
-                <td data-label="Кто делал">${task.owner}</td>
-                <td data-label="Дедлайн">${task.deadline}</td>
-                <td data-label="Финальный комментарий" style="color:#888;">${task.comment || 'Нет заметок'}</td>
-                <td data-label="Удалить"><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function deleteArchivedTask(index) {
-        if(confirm("Удалить запись из архива навсегда?")) { archivedTasks.splice(index, 1); saveAndRender(); }
     }
 
     // --- ЛОГИКА КАЛЕНДАРЯ ---
@@ -560,105 +453,107 @@
         tbody.innerHTML = '';
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
         events.forEach((ev, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td data-label="Дата"><span class="event-tag">${ev.date}</span></td>
-                <td data-label="Событие"><b>${ev.name}</b></td>
-                <td data-label="Где">${ev.location}</td>
-                <td data-label="Комментарий / Детали"><div class="comment-cell" contenteditable="true" onblur="updateEventComment(${index}, this)">${ev.comment || ''}</div></td>
-                <td data-label="Действия"><button class="delete-btn" onclick="deleteEvent(${index})">×</button></td>
-            `;
-            tbody.appendChild(tr);
+            tbody.innerHTML += `
+                <tr>
+                    <td><span class="event-tag">${ev.date}</span></td>
+                    <td><b>${ev.name}</b></td>
+                    <td>${ev.location}</td>
+                    <td><div class="comment-cell" contenteditable="true" onblur="updateEventComment(${index}, this)">${ev.comment || ''}</div></td>
+                    <td><button class="delete-btn" onclick="deleteEvent(${index})">×</button></td>
+                </tr>`;
         });
     }
 
-    function updateEventComment(index, el) { events[index].comment = el.innerText; saveData(); }
+    function updateEventComment(index, el) {
+        events[index].comment = el.innerText;
+        saveData();
+    }
 
     function addEvent() {
         const name = document.getElementById('eventName').value;
         const date = document.getElementById('eventDate').value;
         const location = document.getElementById('eventLocation').value || 'Не указано';
         const comment = document.getElementById('eventComment').value;
+
         if (!name || !date) return alert("Введите дату и название события");
         
         events.push({ date, name, location, comment });
         saveAndRender();
 
-        let message = `📅 Добавлено мероприятие!\n\nСобытие: ${name}\nКогда: ${date}\nГде: ${location}`;
+        let message = `Добавлено мероприятие в Календарь!\n\nСобытие: ${name}\nКогда: ${date}\nГде: ${location}`;
+        if(comment) message += `\nДетали: ${comment}`;
         sendTelegram(message);
-        document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
+
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventLocation').value = '';
+        document.getElementById('eventComment').value = '';
     }
 
     function deleteEvent(index) {
         const deleted = events[index];
         events.splice(index, 1);
         saveAndRender();
-        sendTelegram(`❌ Событие отменено: "${deleted.name}" (${deleted.date})`);
+        sendTelegram(`Событие отменено/удалено: "${deleted.name}" (${deleted.date})`);
     }
 
-    // --- ЛОГИКА ФИНАНСОВ ---
-    function renderFinance() {
-        const tbody = document.getElementById('financeTableBody');
+    // --- ЛОГИКА РАСХОДОВ ---
+    function renderExpenses() {
+        const tbody = document.getElementById('expensesTableBody');
         tbody.innerHTML = '';
-        let incomeTotal = 0, expensesTotal = 0;
-
-        financeRecords.forEach((rec, index) => {
-            const isIncome = rec.type === 'Доход';
-            if (isIncome) incomeTotal += Number(rec.amount); else expensesTotal += Number(rec.amount);
-
-            const tr = document.createElement('tr');
-            tr.className = isIncome ? 'row-income' : 'row-expense';
-            tr.innerHTML = `
-                <td data-label="Дата">${rec.date}</td>
-                <td data-label="Тип"><b>${isIncome ? '🔺 Доход' : '🔻 Расход'}</b></td>
-                <td data-label="Категория">${rec.category}</td>
-                <td data-label="Описание">${rec.desc}</td>
-                <td data-label="Сумма" style="font-weight:bold; color:${isIncome?'var(--success-color)':'var(--accent-color)'}">${rec.amount} MDL</td>
-                <td data-label="Участник">${rec.paidBy}</td>
-                <td data-label="Действия"><button class="delete-btn" onclick="deleteFinanceRecord(${index})">×</button></td>
-            `;
-            tbody.appendChild(tr);
+        let total = 0;
+        expenses.forEach((exp, index) => {
+            total += Number(exp.amount);
+            tbody.innerHTML += `
+                <tr>
+                    <td>${exp.date}</td>
+                    <td>${exp.category}</td>
+                    <td>${exp.desc}</td>
+                    <td>${exp.amount} MDL</td>
+                    <td>${exp.paidBy}</td>
+                    <td><button class="delete-btn" onclick="deleteExpense(${index})">×</button></td>
+                </tr>`;
         });
-
-        const netBalance = incomeTotal - expensesTotal;
-        document.getElementById('totalIncome').innerText = incomeTotal;
-        document.getElementById('totalExpenses').innerText = expensesTotal;
-        const balanceEl = document.getElementById('netBalance');
-        balanceEl.innerText = netBalance;
-        balanceEl.className = netBalance >= 0 ? 'plus' : 'minus';
+        document.getElementById('totalAmount').innerText = total;
     }
 
-    function addFinanceRecord() {
-        const date = document.getElementById('finDate').value;
-        const type = document.getElementById('finType').value;
-        const category = document.getElementById('finCategory').value;
-        const desc = document.getElementById('finDesc').value;
-        const amount = document.getElementById('finAmount').value;
-        const paidBy = document.getElementById('finPaidBy').value || 'Общий бюджет';
+    function addExpense() {
+        const date = document.getElementById('expDate').value;
+        const category = document.getElementById('expCategory').value;
+        const desc = document.getElementById('expDesc').value;
+        const amount = document.getElementById('expAmount').value;
+        const paidBy = document.getElementById('expPaidBy').value || 'Общий бюджет';
+
         if (!desc || !amount) return alert("Заполните описание и сумму");
 
-        financeRecords.push({ date, type, category, desc, amount: Number(amount), paidBy });
+        expenses.push({ date, category, desc, amount: Number(amount), paidBy });
         saveAndRender();
 
-        let message = `💰 Финансы: ${type === 'Доход' ? '🔺 Доход' : '🔻 Расход'}\n\nЧто: ${desc}\nСумма: ${amount} MDL\nИсточник/Кто: ${paidBy}`;
+        let message = `Зафиксирован расход группы!\n\nЧто: ${desc}\nКатегория: ${category}\nСумма: ${amount} MDL\nКто внес: ${paidBy}\nДата: ${date}`;
         sendTelegram(message);
-        document.getElementById('finDesc').value = ''; document.getElementById('finAmount').value = ''; document.getElementById('finPaidBy').value = '';
+
+        document.getElementById('expDesc').value = '';
+        document.getElementById('expAmount').value = '';
+        document.getElementById('expPaidBy').value = '';
     }
 
-    function deleteFinanceRecord(index) {
-        const deleted = financeRecords[index];
-        financeRecords.splice(index, 1);
+    function deleteExpense(index) {
+        const deleted = expenses[index];
+        expenses.splice(index, 1);
         saveAndRender();
-        sendTelegram(`🗑 Удалена фин. запись: "${deleted.desc}" (${deleted.amount} MDL)`);
+        sendTelegram(`Расход удален: "${deleted.desc}" на сумму ${deleted.amount} MDL`);
     }
 
-    // --- НАСТРОЙКИ ---
+    function saveAndRender() {
+        saveData();
+        renderTasks();
+        renderEvents();
+        renderExpenses();
+    }
+
+    // --- НАСТРОЙКИ И ОБЛАКО (GOOGLE DRIVE API) ---
     function loadConfig() {
-        document.getElementById('cfgToken').value = localStorage.getItem('inflow_tg_token') || '';
-        document.getElementById('cfgChatId').value = localStorage.getItem('inflow_tg_chat_id') || '';
         const cid = localStorage.getItem('inflow_gd_client_id') || '';
         document.getElementById('cfgGdClientId').value = cid;
-        
         if (cid) {
             document.getElementById('btnCloudAuth').style.display = 'inline-block';
             document.getElementById('gdStatus').innerText = "🟠 Ожидает вход";
@@ -666,32 +561,11 @@
     }
 
     function saveConfig() {
-        localStorage.setItem('inflow_tg_token', document.getElementById('cfgToken').value.trim());
-        localStorage.setItem('inflow_tg_chat_id', document.getElementById('cfgChatId').value.trim());
-        
         const cid = document.getElementById('cfgGdClientId').value.trim();
         localStorage.setItem('inflow_gd_client_id', cid);
-        
-        alert('Настройки успешно сохранены!');
+        alert('Настройки сохранены! Страница будет перезагружена.');
         location.reload();
     }
-
-    function saveAndRender() {
-        saveData(); renderTasks(); renderArchive(); renderEvents(); renderFinance();
-    }
-
-    // --- ИНТЕГРАЦИЯ GOOGLE DRIVE ---
-    window.onload = function () {
-        toggleFinanceCategories();
-        loadConfig();
-        saveAndRender();
-        
-        document.getElementById('taskDeadline').valueAsDate = new Date();
-        document.getElementById('finDate').valueAsDate = new Date();
-        document.getElementById('eventDate').valueAsDate = new Date();
-
-        initGoogleDriveClient();
-    };
 
     function initGoogleDriveClient() {
         const clientId = localStorage.getItem('inflow_gd_client_id');
@@ -703,7 +577,7 @@
                 scope: 'https://www.googleapis.com/auth/drive.file',
                 callback: async (tokenResponse) => {
                     if (tokenResponse.error !== undefined) {
-                        alert("Ошибка Google OAuth: " + tokenResponse.error);
+                        alert("Ошибка авторизации Google: " + tokenResponse.error);
                         return;
                     }
                     accessToken = tokenResponse.access_token;
@@ -713,7 +587,7 @@
                 },
             });
         } catch (err) {
-            console.error("GIS Init Error:", err);
+            console.error("Ошибка GIS Init:", err);
         }
     }
 
@@ -725,7 +599,6 @@
 
     async function startCloudSync() {
         try {
-            // Ищем файл бэкапа
             const response = await fetch("https://www.googleapis.com/drive/v3/files?q=name='inflow_database.json' and trashed=false", {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
@@ -733,27 +606,24 @@
             
             if (result.files && result.files.length > 0) {
                 gdFileId = result.files[0].id;
-                if (confirm("На Google Диске найдена сохраненная база данных! Загрузить её актуальную версию? (Все локальные данные на этом устройстве будут заменены облачными)")) {
+                if (confirm("На Google Диске обнаружена база данных! Загрузить её на это устройство? (Внимание: локальные данные текущего браузера заменятся облачными)")) {
                     const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${gdFileId}?alt=media`, {
                         headers: { Authorization: `Bearer ${accessToken}` }
                     });
                     const cloudData = await fileResponse.json();
                     
                     tasks = cloudData.tasks || [];
-                    archivedTasks = cloudData.archivedTasks || [];
+                    expenses = cloudData.expenses || [];
                     events = cloudData.events || [];
-                    financeRecords = cloudData.financeRecords || [];
                     
-                    // Обновляем локально
                     localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-                    localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+                    localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
                     localStorage.setItem('inflow_events', JSON.stringify(events));
-                    localStorage.setItem('inflow_finance', JSON.stringify(financeRecords));
                     
-                    renderTasks(); renderArchive(); renderEvents(); renderFinance();
+                    renderTasks(); renderEvents(); renderExpenses();
                 }
             } else {
-                if (confirm("Резервная копия на Диске не обнаружена. Создать новый файл в облаке на основе ваших текущих данных?")) {
+                if (confirm("Файл базы данных не найден в облаке. Создать новый файл на Google Диске на основе данных этого устройства?")) {
                     await createCloudFile();
                 }
             }
@@ -761,7 +631,7 @@
             document.getElementById('gdStatus').style.color = "var(--success-color)";
             document.getElementById('btnCloudAuth').style.display = 'none';
         } catch (err) {
-            console.error("Cloud Sync Error:", err);
+            console.error("Ошибка облака:", err);
             document.getElementById('gdStatus').innerText = "🔴 Ошибка";
             document.getElementById('gdStatus').style.color = "#cc0000";
         }
@@ -769,9 +639,8 @@
 
     async function createCloudFile() {
         const metadata = { name: 'inflow_database.json', mimeType: 'application/json' };
-        const data = { tasks, archivedTasks, events, financeRecords };
-        
-        const boundary = 'inflow_boundary_string';
+        const data = { tasks, expenses, events };
+        const boundary = 'inflow_boundary';
         const delimiter = `\r\n--${boundary}\r\n`;
         const close_delim = `\r\n--${boundary}--`;
         
@@ -792,7 +661,7 @@
     }
 
     async function updateCloudFile() {
-        const data = { tasks, archivedTasks, events, financeRecords };
+        const data = { tasks, expenses, events };
         fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdFileId}?uploadType=media`, {
             method: 'PATCH',
             headers: {
@@ -800,8 +669,18 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        }).catch(err => console.error("Cloud auto-save error:", err));
+        }).catch(err => console.error("Ошибка автосохранения в облако:", err));
     }
+
+    // Запуск при загрузке страницы
+    window.onload = function() {
+        loadConfig();
+        saveAndRender();
+        document.getElementById('taskDeadline').valueAsDate = new Date();
+        document.getElementById('expDate').valueAsDate = new Date();
+        document.getElementById('eventDate').valueAsDate = new Date();
+        initGoogleDriveClient();
+    };
 </script>
 </body>
 </html>
