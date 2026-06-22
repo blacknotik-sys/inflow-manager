@@ -106,12 +106,6 @@
             <input type="text" id="taskName" placeholder="Задача">
             <input type="text" id="taskOwner" placeholder="Кто делает">
             <input type="date" id="taskDeadline">
-            <select id="taskStatus">
-                <option value="Не начато">Не начато</option>
-                <option value="В процессе">В процессе</option>
-                <option value="Ожидание">Ожидание</option>
-                <option value="Готово">Готово</option>
-            </select>
             <select id="taskPriority">
                 <option value="Низкий">Низкий</option>
                 <option value="Средний">Средний</option>
@@ -126,12 +120,11 @@
                 <thead>
                     <tr>
                         <th style="width: 14%;">Категория</th>
-                        <th style="width: 22%;">Задача</th>
+                        <th style="width: 26%;">Задача</th>
                         <th style="width: 14%;">Кто</th>
-                        <th style="width: 10%;">Дедлайн</th>
-                        <th style="width: 10%;">Статус</th>
-                        <th style="width: 10%;">Приоритет</th>
-                        <th style="width: 12%;">Комментарий</th>
+                        <th style="width: 12%;">Дедлайн</th>
+                        <th style="width: 12%;">Приоритет</th>
+                        <th style="width: 14%;">Комментарий</th>
                         <th style="width: 8%;">Действия</th>
                     </tr>
                 </thead>
@@ -315,7 +308,7 @@
         const tbody = document.getElementById('tasksTableBody');
         if (!tbody) return; tbody.innerHTML = '';
         if (tasks.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
             return;
         }
         tasks.forEach((task, index) => {
@@ -325,7 +318,6 @@
                 <td><b>${escapeHTML(task.name)}</b></td>
                 <td>${escapeHTML(task.owner)}</td>
                 <td>${escapeHTML(task.deadline)}</td>
-                <td>${escapeHTML(task.status)}</td>
                 <td>${displayPriority}</td>
                 <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateTaskComment(${index}, this.value)"></td>
                 <td style="white-space:nowrap;">
@@ -365,12 +357,11 @@
         const category = document.getElementById('taskCategory').value;
         const ownerInput = document.getElementById('taskOwner').value.trim();
         const deadline = document.getElementById('taskDeadline').value;
-        const status = document.getElementById('taskStatus').value;
         const priority = document.getElementById('taskPriority').value;
         const comment = document.getElementById('taskComment').value.trim();
 
         const userMapping = resolveTelegramTag(ownerInput);
-        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, status, priority, comment });
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, priority, comment });
         
         saveData(); renderTasks();
 
@@ -421,7 +412,6 @@
         events.push(ev);
         saveData(); renderEvents();
 
-        // Отправляем сообщение со ссылкой прямо в чат группы!
         const inlineCalLink = generateGoogleCalendarLink(ev);
         let message = `📅 НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ!\n\nЧто: ${name}\nКогда: ${date}\nГде: ${location || '—'}\nДетали: ${comment || '—'}\n\n📥 Ссылка для добавления себе в календарь:\n${inlineCalLink}`;
         sendTelegram(message, false);
@@ -437,103 +427,4 @@
         let inc = 0, exp = 0;
         financeTransactions.forEach((item, index) => {
             const isInc = item.type === "Доход";
-            const amt = Number(item.amount) || 0;
-            if(isInc) inc += amt; else exp += amt;
-            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
-                <td>${escapeHTML(item.date)}</td>
-                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
-                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
-                <td>${escapeHTML(item.desc)}</td>
-                <td>${amt} MDL</td>
-                <td>${escapeHTML(item.user)}</td>
-                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
-            </tr>`;
-        });
-        document.getElementById('totalIncome').innerText = inc + " MDL";
-        document.getElementById('totalExpense').innerText = exp + " MDL";
-        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
-    }
-
-    function addFinanceTransaction() {
-        const desc = document.getElementById('finDesc').value.trim();
-        const amount = document.getElementById('finAmount').value;
-        if (!desc || !amount) return alert("Заполните поля");
-        
-        const date = document.getElementById('finDate').value;
-        const type = document.getElementById('finType').value;
-        const category = document.getElementById('finCategory').value;
-        const user = document.getElementById('finUser').value.trim() || 'Общий';
-
-        financeTransactions.push({ date, type, category, desc, amount, user });
-        saveData(); renderFinance();
-
-        document.getElementById('finDesc').value = ''; 
-        document.getElementById('finAmount').value = '';
-    }
-
-    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
-
-    function loadSettingsInputs() {
-        document.getElementById('cfgTgToken').value = TG_TOKEN;
-        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
-    }
-
-    function saveSettings() {
-        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
-        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
-        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
-        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
-        alert("Настройки сохранены!");
-    }
-
-    function exportData() {
-        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json';
-        a.click();
-    }
-
-    function importData(inputElement) {
-        const file = inputElement.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                tasks = imported.tasks || [];
-                archivedTasks = imported.archivedTasks || [];
-                financeTransactions = imported.financeTransactions || [];
-                events = imported.events || [];
-                saveData(); renderAllTables();
-                alert("База данных успешно восстановлена!");
-            } catch(err) { alert("Ошибка чтения файла. Убедитесь, что выбрали правильный .json бэкап."); }
-        };
-        reader.readAsText(file);
-    }
-
-    function resetAllData() {
-        if(confirm("Удалить все данные программы? Внимание: финансы и задачи сотрутся.")) {
-            SafeStorage.clear();
-            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
-            renderAllTables();
-        }
-    }
-
-    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderFinance(); }
-
-    function initApp() {
-        loadLocalStorage();
-        loadSettingsInputs();
-        renderAllTables();
-        
-        const todayStr = new Date().toISOString().split('T')[0];
-        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
-        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
-        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
-    }
-
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
-</script>
-</body>
-</html>
+            const amt = Number(item.amount
