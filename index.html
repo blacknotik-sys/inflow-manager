@@ -427,4 +427,103 @@
         let inc = 0, exp = 0;
         financeTransactions.forEach((item, index) => {
             const isInc = item.type === "Доход";
-            const amt = Number(item.amount
+            const amt = Number(item.amount) || 0;
+            if(isInc) inc += amt; else exp += amt;
+            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
+                <td>${escapeHTML(item.date)}</td>
+                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
+                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
+                <td>${escapeHTML(item.desc)}</td>
+                <td>${amt} MDL</td>
+                <td>${escapeHTML(item.user)}</td>
+                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+            </tr>`;
+        });
+        document.getElementById('totalIncome').innerText = inc + " MDL";
+        document.getElementById('totalExpense').innerText = exp + " MDL";
+        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
+    }
+
+    function addFinanceTransaction() {
+        const desc = document.getElementById('finDesc').value.trim();
+        const amount = document.getElementById('finAmount').value;
+        if (!desc || !amount) return alert("Заполните поля");
+        
+        const date = document.getElementById('finDate').value;
+        const type = document.getElementById('finType').value;
+        const category = document.getElementById('finCategory').value;
+        const user = document.getElementById('finUser').value.trim() || 'Общий';
+
+        financeTransactions.push({ date, type, category, desc, amount, user });
+        saveData(); renderFinance();
+
+        document.getElementById('finDesc').value = ''; 
+        document.getElementById('finAmount').value = '';
+    }
+
+    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
+
+    function loadSettingsInputs() {
+        document.getElementById('cfgTgToken').value = TG_TOKEN;
+        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
+    }
+
+    function saveSettings() {
+        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
+        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
+        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
+        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
+        alert("Настройки сохранены!");
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json';
+        a.click();
+    }
+
+    function importData(inputElement) {
+        const file = inputElement.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                tasks = imported.tasks || [];
+                archivedTasks = imported.archivedTasks || [];
+                financeTransactions = imported.financeTransactions || [];
+                events = imported.events || [];
+                saveData(); renderAllTables();
+                alert("База данных успешно восстановлена!");
+            } catch(err) { alert("Ошибка чтения файла. Убедитесь, что выбрали правильный .json бэкап."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetAllData() {
+        if(confirm("Удалить все данные программы? Внимание: финансы и задачи сотрутся.")) {
+            SafeStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
+            renderAllTables();
+        }
+    }
+
+    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderFinance(); }
+
+    function initApp() {
+        loadLocalStorage();
+        loadSettingsInputs();
+        renderAllTables();
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
+</script>
+</body>
+</html>
