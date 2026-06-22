@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InFlow Band Manager</title>
     <style>
+        /* Гарантия точного расчета размеров: отступы больше не раздувают элементы наружу */
+        .container, .form-group, input, select, button, .comment-cell, table, th, td, .tabs, .tab-btn {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-color: #121212;
             --panel-bg: #1e1e1e;
@@ -218,3 +223,692 @@
 
         .summary-box {
             background: #222;
+            padding: 12px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .summary-box.income-box span { color: var(--success-color); }
+        .summary-box.expense-box span { color: var(--danger-color); }
+        .summary-box.balance-box span { color: #00fff0; }
+
+        .event-tag {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #444;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .archived-tr { opacity: 0.6; }
+        .income-tr { background-color: rgba(40, 167, 69, 0.03); }
+        .expense-tr { background-color: rgba(220, 53, 69, 0.03); }
+
+        .settings-card {
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .settings-card label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .settings-card input {
+            width: 100%;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
+
+        /* --- ИЗОЛИРОВАННАЯ МОБИЛЬНАЯ ОПТИМИЗАЦИЯ --- */
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            h1 { font-size: 1.6rem; }
+            
+            .tabs {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+            .tabs button:nth-child(5) {
+                grid-column: span 2;
+            }
+
+            /* Чистый вертикальный Flex на мобильных вместо непредсказуемого block */
+            .form-group {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px;
+                padding: 12px;
+            }
+            
+            /* Защита от авто-масштабирования текста в мобильном Chrome */
+            .form-group input, 
+            .form-group select, 
+            .form-group button.add-btn {
+                width: 100% !important;
+                flex: none !important;
+                font-size: 16px !important; 
+            }
+
+            .comment-cell {
+                font-size: 16px !important;
+            }
+
+            .finance-summary {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .summary-box { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>INFLOW <span>| Band Manager</span></h1>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
+        <button class="tab-btn" onclick="switchTab('archive', this)">📁 Архив задач</button>
+        <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Календарь</button>
+        <button class="tab-btn" onclick="switchTab('finance', this)">💵 Финансы</button>
+        <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
+    </div>
+
+    <div id="tasks" class="tab-content active">
+        <h2>Менеджер активных задач</h2>
+        <div class="form-group">
+            <select id="taskCategory">
+                <option value="Организация">Организация</option>
+                <option value="Творчество">Творчество</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Концерты">Концерты</option>
+                <option value="Студия">Студия</option>
+                <option value="PR / Продвижение">PR / Продвижение</option>
+            </select>
+            <input type="text" id="taskName" placeholder="Задача">
+            <input type="text" id="taskOwner" placeholder="Кто делает">
+            <input type="date" id="taskDeadline">
+            <select id="taskStatus">
+                <option value="Не начато">Не начато</option>
+                <option value="В процессе">В процессе</option>
+                <option value="Ожидание">Ожидание</option>
+                <option value="Готово">Готово</option>
+            </select>
+            <select id="taskPriority">
+                <option value="Низкий">Низкий</option>
+                <option value="Средний">Средний</option>
+                <option value="Высокий">Высокий</option>
+            </select>
+            <input type="text" id="taskComment" placeholder="Заметки">
+            <button class="add-btn" onclick="addTask()">Добавить задачу (+)</button>
+        </div>
+        
+        <h3>Текущие дела</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 22%;">Задача</th>
+                        <th style="width: 14%;">Кто</th>
+                        <th style="width: 10%;">Дедлайн</th>
+                        <th style="width: 10%;">Статус</th>
+                        <th style="width: 10%;">Приоритет</th>
+                        <th style="width: 12%;">Комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="archive" class="tab-content">
+        <h2>📁 Архив выполненных задач</h2>
+        <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">История успешно завершенных тасков группы.</p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr style="background-color: rgba(40, 167, 69, 0.05);">
+                        <th style="width: 14%; color: #28a745;">Категория</th>
+                        <th style="width: 26%; color: #28a745;">Задача</th>
+                        <th style="width: 14%; color: #28a745;">Кто сделал</th>
+                        <th style="width: 12%; color: #28a745;">Дедлайн был</th>
+                        <th style="width: 26%; color: #28a745;">Финальный комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedTasksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="calendar" class="tab-content">
+        <h2>Календарь мероприятий</h2>
+        <div class="form-group">
+            <input type="date" id="eventDate">
+            <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
+            <input type="text" id="eventLocation" placeholder="Место / Клуб">
+            <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
+            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 20%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 42%;">Комментарий / Детали</th>
+                        <th style="width: 8%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="finance" class="tab-content">
+        <h2>Управление финансами группы</h2>
+        <div class="form-group">
+            <input type="date" id="finDate">
+            <select id="finType">
+                <option value="Расход">💸 Расход</option>
+                <option value="Доход">💰 Доход</option>
+            </select>
+            <select id="finCategory">
+                <option value="Концерты / Гонорары">Концерты / Гонорары</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Студия / Сведение">Студия / Сведение</option>
+                <option value="Маркетинг / PR">Маркетинг / PR</option>
+                <option value="Мерч">Мерч</option>
+                <option value="Оборудование">Оборудование</option>
+                <option value="Стриминг / Дистрибуция">Стриминг / Дистрибуция</option>
+                <option value="Другое">Другое</option>
+            </select>
+            <input type="text" id="finDesc" placeholder="Описание транзакции">
+            <input type="number" id="finAmount" placeholder="Сумма (MDL)">
+            <input type="text" id="finUser" placeholder="Кто внес / оплатил">
+            <button class="add-btn" onclick="addFinanceTransaction()">Внести в бюджет (+)</button>
+        </div>
+
+        <h3>История транзакций</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 12%;">Тип</th>
+                        <th style="width: 18%;">Категория</th>
+                        <th style="width: 28%;">Описание</th>
+                        <th style="width: 12%;">Сумма</th>
+                        <th style="width: 13%;">Кто</th>
+                        <th style="width: 5%;"></th>
+                    </tr>
+                </thead>
+                <tbody id="financeTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="finance-summary">
+            <div class="summary-box income-box">Общий доход: <span id="totalIncome">0</span> MDL</div>
+            <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0</span> MDL</div>
+            <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0</span> MDL</div>
+        </div>
+    </div>
+
+    <div id="settings" class="tab-content">
+        <h2>Настройки системы и Синхронизация</h2>
+        
+        <div class="settings-card">
+            <h3>🔔 Уведомления Telegram Bot</h3>
+            <label>
+                Токен Бота (Bot Token):
+                <input type="text" id="cfgTgToken">
+            </label>
+            <label>
+                ID Чата / Группы (Chat ID):
+                <input type="text" id="cfgTgChatId">
+            </label>
+            <button class="tab-btn" style="background: var(--accent-color); border: none; color: #fff;" onclick="saveSettings()">Сохранить настройки Telegram</button>
+        </div>
+
+        <div class="settings-card">
+            <h3>🔄 Резервное копирование и Синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">Выгружайте базу данных файлом для мгновенного переноса данных между десктопом и Chrome на вашем смартфоне.</p>
+            <div>
+                <button class="tab-btn" onclick="exportData()">📥 Скачать бэкап (Экспорт)</button>
+                <button class="tab-btn" onclick="document.getElementById('importFile').click()">📤 Загрузить файл (Импорт)</button>
+                <input type="file" id="importFile" style="display: none;" onchange="importData(this)">
+                <button class="delete-btn" style="padding: 12px 24px; margin-top:5px;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+
+    let TG_TOKEN = localStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = localStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    function sendTelegram(text, shouldPin = false) {
+        if(!TG_TOKEN || !TG_CHAT_ID) return;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (shouldPin && data.ok && data.result && data.result.message_id) {
+                    const msgId = data.result.message_id;
+                    const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${msgId}&disable_notification=true`;
+                    fetch(pinUrl).catch(err => console.error("Ошибка авто-закрепления:", err));
+                }
+            })
+            .catch(err => console.error("Ошибка Telegram API:", err));
+    }
+
+    let tasks = [];
+    let archivedTasks = [];
+    let financeTransactions = [];
+    let events = [];
+
+    try {
+        tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
+        archivedTasks = JSON.parse(localStorage.getItem('inflow_archived_tasks')) || [];
+        events = JSON.parse(localStorage.getItem('inflow_events')) || [];
+        
+        if (localStorage.getItem('inflow_finance')) {
+            financeTransactions = JSON.parse(localStorage.getItem('inflow_finance')) || [];
+        } else if (localStorage.getItem('inflow_expenses')) {
+            const oldExpenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
+            financeTransactions = oldExpenses.map(exp => ({
+                date: exp.date || '',
+                type: 'Расход',
+                category: exp.category || 'Другое',
+                desc: exp.desc || '',
+                amount: Number(exp.amount) || 0,
+                user: exp.paidBy || 'Общий'
+            }));
+            localStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        }
+    } catch (e) {
+        console.error("Сбой парсинга локального хранилища:", e);
+    }
+
+    if (!Array.isArray(tasks)) tasks = [];
+    if (!Array.isArray(archivedTasks)) archivedTasks = [];
+    if (!Array.isArray(financeTransactions)) financeTransactions = [];
+    if (!Array.isArray(events)) events = [];
+
+    function saveData() {
+        localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        localStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        localStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        localStorage.setItem('inflow_events', JSON.stringify(events));
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
+    }
+
+    function resolveTelegramTag(ownerName) {
+        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
+        const lowerName = String(ownerName).trim().toLowerCase();
+        if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
+        if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
+        if (lowerName === 'серж' || lowerName === 'сергей' || lowerName === 'серега' || lowerName === 'серёга') {
+            return { display: 'Серж', tg: '@Serjblacknote' };
+        }
+        return { display: ownerName, tg: ownerName };
+    }
+
+    function renderTasks() {
+        try {
+            const tbody = document.getElementById('tasksTableBody');
+            if (!tbody) return; tbody.innerHTML = '';
+            
+            tasks.forEach((task, index) => {
+                if (!task) return;
+                let category = task.category || 'Организация';
+                let name = task.name || 'Без названия';
+                let owner = task.owner || 'Не указан';
+                let ownerTg = task.ownerTg || '';
+                let deadline = task.deadline || '—';
+                let status = task.status || 'Не начато';
+                let priority = task.priority || 'Низкий';
+                let comment = task.comment || '';
+
+                let displayPriority = "🟢 Низкий";
+                if (priority === "Высокий") displayPriority = "🔴 Высокий";
+                else if (priority === "Средний") displayPriority = "🟡 Средний";
+
+                let ownerText = owner;
+                if (ownerTg && ownerTg.startsWith('@') && !String(owner).includes('@')) {
+                    ownerText = `${owner} (${ownerTg})`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="event-tag" style="background:#555;">${category}</span></td>
+                        <td><b>${name}</b></td>
+                        <td>${ownerText}</td>
+                        <td>${deadline}</td>
+                        <td>${status}</td>
+                        <td>${displayPriority}</td>
+                        <td><div class="comment-cell" contenteditable="true" onblur="updateTaskComment(${index}, this)">${comment}</div></td>
+                        <td style="white-space: nowrap;">
+                            <button class="complete-btn" onclick="archiveTask(${index})" title="Выполнено">✓</button>
+                            <button class="delete-btn" onclick="deleteTask(${index})" title="Удалить">×</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера задач:", err); }
+    }
+
+    function renderArchivedTasks() {
+        try {
+            const tbody = document.getElementById('archivedTasksTableBody');
+            if (!tbody) return; tbody.innerHTML = '';
+
+            archivedTasks.forEach((task, index) => {
+                if (!task) return;
+                let category = task.category || 'Организация';
+                let name = task.name || 'Без названия';
+                let owner = task.owner || '—';
+                let ownerTg = task.ownerTg || '';
+                let deadline = task.deadline || '—';
+                let comment = task.comment || '';
+
+                tbody.innerHTML += `
+                    <tr class="archived-tr">
+                        <td><span class="event-tag" style="background:#28a745;">${category}</span></td>
+                        <td><del>${name}</del></td>
+                        <td>${owner} (${ownerTg})</td>
+                        <td>${deadline}</td>
+                        <td><div class="comment-cell" contenteditable="true" onblur="updateArchiveComment(${index}, this)">${comment}</div></td>
+                        <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера архива:", err); }
+    }
+
+    function updateTaskComment(index, el) { if(tasks[index]) { tasks[index].comment = el.innerText; saveData(); } }
+    function updateArchiveComment(index, el) { if(archivedTasks[index]) { archivedTasks[index].comment = el.innerText; saveData(); } }
+
+    function addTask() {
+        const category = document.getElementById('taskCategory').value;
+        const name = document.getElementById('taskName').value.trim();
+        const ownerInput = document.getElementById('taskOwner').value.trim() || 'Не указан';
+        const deadline = document.getElementById('taskDeadline').value;
+        const status = document.getElementById('taskStatus').value;
+        const priority = document.getElementById('taskPriority').value;
+        const comment = document.getElementById('taskComment').value.trim();
+
+        if (!name) return alert("Введите название задачи");
+
+        const userMapping = resolveTelegramTag(ownerInput);
+
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, status, priority, comment });
+        saveAndRender();
+
+        let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
+        let statusIcon = status === "Ожидание" ? "⚠️" : (status === "Готово" ? "✅" : "⏳");
+
+        let message = `📌 НОВАЯ ЗАДАЧА В ЗАКРЕП! [Категория: ${category}]\n\nЧто: ${name}\nКто делает: ${userMapping.tg}\nДедлайн: ${deadline || 'Не указан'}\nПриоритет: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
+        if(comment) message += `\nЗаметки: ${comment}`;
+        
+        sendTelegram(message, true);
+
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskOwner').value = '';
+        document.getElementById('taskComment').value = '';
+    }
+
+    function archiveTask(index) {
+        if(!tasks[index]) return;
+        const completedTask = tasks[index];
+        archivedTasks.push(completedTask);
+        tasks.splice(index, 1);
+        saveAndRender();
+
+        let targetTg = completedTask.ownerTg || completedTask.owner;
+        let message = `✅ ЗАДАЧА УСПЕШНО ВЫПОЛНЕНА И ПЕРЕНЕСЕНА В АРХИВ!\n\n• Категория: ${completedTask.category}\n• Задача: ${completedTask.name}\n• Выполнил: ${targetTg}`;
+        sendTelegram(message, false);
+    }
+
+    function deleteTask(index) {
+        if(!tasks[index]) return;
+        const deleted = tasks[index];
+        tasks.splice(index, 1);
+        saveAndRender();
+        sendTelegram(`🗑 Отменена задача: "${deleted.name}"`, false);
+    }
+
+    function deleteArchivedTask(index) {
+        if(!archivedTasks[index]) return;
+        archivedTasks.splice(index, 1);
+        saveAndRender();
+    }
+
+    function renderEvents() {
+        try {
+            const tbody = document.getElementById('calendarTableBody');
+            if (!tbody) return; tbody.innerHTML = '';
+            events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            events.forEach((ev, index) => {
+                if (!ev) return;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="event-tag">${ev.date || '—'}</span></td>
+                        <td><b>${ev.name || 'Событие'}</b></td>
+                        <td>${ev.location || '—'}</td>
+                        <td><div class="comment-cell" contenteditable="true" onblur="updateEventComment(${index}, this)">${ev.comment || ''}</div></td>
+                        <td><button class="delete-btn" onclick="deleteEvent(${index})">×</button></td>
+                    </tr>`;
+            });
+        } catch(err) { console.error("Ошибка рендера календаря:", err); }
+    }
+
+    function updateEventComment(index, el) { if(events[index]) { events[index].comment = el.innerText; saveData(); } }
+
+    function addEvent() {
+        const name = document.getElementById('eventName').value.trim();
+        const date = document.getElementById('eventDate').value;
+        const location = document.getElementById('eventLocation').value.trim() || 'Не указано';
+        const comment = document.getElementById('eventComment').value.trim();
+
+        if (!name || !date) return alert("Введите дату и название события");
+        
+        events.push({ date, name, location, comment });
+        saveAndRender();
+
+        let message = `📅 НОВОЕ МЕРОПРИЯТИЕ ДОБАВЛЕНО В ЗАКРЕП!\n\nСобытие: ${name}\nКогда: ${date}\nГде: ${location}`;
+        if(comment) message += `\nДетали: ${comment}`;
+        
+        sendTelegram(message, true);
+
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventLocation').value = '';
+        document.getElementById('eventComment').value = '';
+    }
+
+    function deleteEvent(index) {
+        if(!events[index]) return;
+        const deleted = events[index];
+        events.splice(index, 1);
+        saveAndRender();
+        sendTelegram(`❌ Мероприятие отменено: "${deleted.name}"`, false);
+    }
+
+    function renderFinance() {
+        try {
+            const tbody = document.getElementById('financeTableBody');
+            if (!tbody) return; tbody.innerHTML = '';
+            
+            let incomeTotal = 0;
+            let expenseTotal = 0;
+
+            financeTransactions.forEach((item, index) => {
+                if (!item) return;
+                const isIncome = item.type === "Доход";
+                const rowClass = isIncome ? "income-tr" : "expense-tr";
+                const sign = isIncome ? "+" : "-";
+                const color = isIncome ? "var(--success-color)" : "var(--danger-color)";
+                const amount = Number(item.amount) || 0;
+                const user = item.user || item.paidBy || 'Общий';
+
+                if(isIncome) incomeTotal += amount;
+                else expenseTotal += amount;
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${item.date || '—'}</td>
+                        <td style="color: ${color}; font-weight: bold;">${item.type || 'Расход'}</td>
+                        <td><span class="event-tag" style="background: #444;">${item.category || 'Другое'}</span></td>
+                        <td>${item.desc || '—'}</td>
+                        <td style="color: ${color}; font-weight: bold;">${sign} ${amount} MDL</td>
+                        <td>${user}</td>
+                        <td><button class="delete-btn" onclick="deleteFinanceTransaction(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+                    </tr>`;
+            });
+
+            document.getElementById('totalIncome').innerText = incomeTotal;
+            document.getElementById('totalExpense').innerText = expenseTotal;
+            document.getElementById('netBalance').innerText = incomeTotal - expenseTotal;
+        } catch(err) { console.error("Ошибка рендера финансов:", err); }
+    }
+
+    function addFinanceTransaction() {
+        const date = document.getElementById('finDate').value;
+        const type = document.getElementById('finType').value;
+        const category = document.getElementById('finCategory').value;
+        const desc = document.getElementById('finDesc').value.trim();
+        const amount = document.getElementById('finAmount').value;
+        const user = document.getElementById('finUser').value.trim() || 'Общий';
+
+        if (!desc || !amount) return alert("Заполните описание транзакции и сумму");
+
+        financeTransactions.push({ date, type, category, desc, amount: Number(amount), user });
+        saveAndRender();
+
+        let icon = type === "Доход" ? "💰" : "💸";
+        let message = `${icon} ФИНАНСЫ: Внесен ${type}\n\nЧто: ${desc}\nКатегория: ${category}\nСумма: ${amount} MDL\nКто: ${user}`;
+        sendTelegram(message, false);
+
+        document.getElementById('finDesc').value = '';
+        document.getElementById('finAmount').value = '';
+        document.getElementById('finUser').value = '';
+    }
+
+    function deleteFinanceTransaction(index) {
+        if(!financeTransactions[index]) return;
+        financeTransactions.splice(index, 1);
+        saveAndRender();
+    }
+
+    function loadSettingsInputs() {
+        const tInput = document.getElementById('cfgTgToken');
+        const cInput = document.getElementById('cfgTgChatId');
+        if(tInput) tInput.value = TG_TOKEN;
+        if(cInput) cInput.value = TG_CHAT_ID;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadSettingsInputs();
+    });
+
+    function saveSettings() {
+        const token = document.getElementById('cfgTgToken').value.trim();
+        const chatId = document.getElementById('cfgTgChatId').value.trim();
+        if(!token || !chatId) return alert("Заполните настройки!");
+        TG_TOKEN = token;
+        TG_CHAT_ID = chatId;
+        localStorage.setItem('inflow_tg_token', token);
+        localStorage.setItem('inflow_tg_chat_id', chatId);
+        alert("Конфигурация бота сохранена!");
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const fileName = 'inflow_backup_' + new Date().toISOString().split('T')[0] + '.json';
+
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute('href', dataUri);
+        downloadAnchor.setAttribute('download', fileName);
+        downloadAnchor.click();
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                tasks = Array.isArray(imported.tasks) ? imported.tasks : tasks;
+                archivedTasks = Array.isArray(imported.archivedTasks) ? imported.archivedTasks : archivedTasks;
+                financeTransactions = Array.isArray(imported.financeTransactions) ? imported.financeTransactions : (Array.isArray(imported.expenses) ? imported.expenses.map(x => ({...x, type: 'Расход'})) : financeTransactions);
+                events = Array.isArray(imported.events) ? imported.events : events;
+                
+                saveAndRender();
+                alert("Данные успешно синхронизированы!");
+            } catch (err) {
+                alert("Некорректный файл бэкапа.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetAllData() {
+        if(confirm("Полностью стереть локальный кэш приложения?")) {
+            localStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
+            TG_TOKEN = DEFAULT_TG_TOKEN; TG_CHAT_ID = DEFAULT_TG_CHAT_ID;
+            saveAndRender();
+            loadSettingsInputs();
+        }
+    }
+
+    function saveAndRender() {
+        saveData();
+        renderTasks();
+        renderArchivedTasks();
+        renderEvents();
+        renderFinance();
+    }
+
+    saveAndRender();
+
+    try {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+    } catch(e) {}
+</script>
+
+</body>
+</html>
