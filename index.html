@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InFlow Band Manager (Pro Edition)</title>
+    <title>InFlow Band Manager (Ultimate Edition)</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -165,7 +165,6 @@
             background: rgba(255,255,255,0.02);
         }
 
-        /* Стили для тэгов и важности */
         .owner-tag {
             background-color: rgba(255, 51, 102, 0.15);
             color: var(--accent-color);
@@ -195,7 +194,6 @@
         tr.row-p-medium { border-left: 4px solid var(--warning-color); }
         tr.row-p-low { border-left: 4px solid var(--success-color); }
 
-        /* Стили для финансового учета */
         .type-income { color: var(--success-color); font-weight: bold; }
         .type-expense { color: var(--accent-color); font-weight: bold; }
 
@@ -265,6 +263,7 @@
         <button class="tab-btn active" onclick="switchTab('tasks')">Задачи и Сроки</button>
         <button class="tab-btn" onclick="switchTab('calendar')">Календарь</button>
         <button class="tab-btn" onclick="switchTab('expenses')">Учет Финансов</button>
+        <button class="tab-btn" onclick="switchTab('archive')">📦 Архив Задач</button>
         <button class="tab-btn" onclick="switchTab('settings')">⚙️ Настройки</button>
     </div>
 
@@ -370,6 +369,24 @@
         </div>
     </div>
 
+    <div id="archive" class="tab-content">
+        <h2>Архив выполненных задач</h2>
+        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 15px;">Здесь хранятся все успешно завершенные задачи вашей группы.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Задача</th>
+                    <th style="width: 15%;">Ответственный</th>
+                    <th style="width: 15%;">Дедлайн</th>
+                    <th style="width: 15%;">Статус</th>
+                    <th style="width: 25%;">Финальный комментарий</th>
+                    <th style="width: 5%;"></th>
+                </tr>
+            </thead>
+            <tbody id="archiveTableBody"></tbody>
+        </table>
+    </div>
+
     <div id="settings" class="tab-content">
         <h2>Настройки облачной синхронизации</h2>
         <p style="color: #aaa; font-size: 0.95rem;">Для работы общего доступа со всех устройств укажите ваш идентификатор приложения Google.</p>
@@ -391,17 +408,19 @@
     let accessToken = null;
     let gdFileId = null;
 
-    // Модифицированная функция отправки с автозакреплением в шапке
-    function sendTelegram(text) {
+    // Главная функция отправки с гибким автозакреплением (shouldPin)
+    function sendTelegram(text, shouldPin = true) {
         const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
         fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (data.ok) {
-                    const messageId = data.result.message_id;
-                    // Отправляем запрос на закрепление этого сообщения
-                    const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${messageId}&disable_notification=true`;
-                    fetch(pinUrl).catch(err => console.error("Ошибка автозакрепления Telegram:", err));
+                    // Закрепляем сообщение только если параметр shouldPin равен true
+                    if (shouldPin) {
+                        const messageId = data.result.message_id;
+                        const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${messageId}&disable_notification=true`;
+                        fetch(pinUrl).catch(err => console.error("Ошибка автозакрепления Telegram:", err));
+                    }
                 } else {
                     alert("Ошибка Telegram API: " + data.description);
                 }
@@ -409,12 +428,15 @@
             .catch(err => console.error("Ошибка сети Telegram:", err));
     }
 
+    // Загрузка списков из локальной памяти
     let tasks = JSON.parse(localStorage.getItem('inflow_tasks')) || [];
+    let archiveTasks = JSON.parse(localStorage.getItem('inflow_archive_tasks')) || [];
     let expenses = JSON.parse(localStorage.getItem('inflow_expenses')) || [];
     let events = JSON.parse(localStorage.getItem('inflow_events')) || [];
 
     function saveData() {
         localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        localStorage.setItem('inflow_archive_tasks', JSON.stringify(archiveTasks));
         localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
         localStorage.setItem('inflow_events', JSON.stringify(events));
 
@@ -447,7 +469,7 @@
                     <td>${task.status}</td>
                     <td><span class="priority-badge ${priorityClass}">${task.priority}</span></td>
                     <td><div class="comment-cell" contenteditable="true" onblur="updateTaskComment(${index}, this)">${task.comment || ''}</div></td>
-                    <td><button class="delete-btn" onclick="deleteTask(${index})">×</button></td>
+                    <td><button class="delete-btn" onclick="deleteTask(${index})" title="Завершить задачу и отправить в архив">×</button></td>
                 </tr>`;
         });
     }
@@ -467,7 +489,8 @@
 
         if (!name) return alert("Введите название задачи");
 
-        tasks.push({ name, owner, deadline, status, priority, comment });
+        const taskObj = { name, owner, deadline, status, priority, comment, tgMessageId: null };
+        tasks.push(taskObj);
         saveAndRender();
 
         let priorityIcon = priority === "Высокий" ? "🔴" : (priority === "Средний" ? "🟡" : "🟢");
@@ -475,21 +498,74 @@
 
         let message = `📌 ЗАКРЕПЛЕНО НАЗНАЧЕНИЕ ЗАДАЧИ\n\nЧто сделать: ${name}\nОтветственный: @${owner}\nСрок до: ${deadline}\nВажность: ${priorityIcon} ${priority}\nСтатус: ${statusIcon} ${status}`;
         if(comment) message += `\nЗаметки: ${comment}`;
-        sendTelegram(message);
+        
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(message)}`;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    const msgId = data.result.message_id;
+                    taskObj.tgMessageId = msgId; 
+                    saveData();
+
+                    const pinUrl = `https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${msgId}&disable_notification=true`;
+                    fetch(pinUrl).catch(err => console.error("Ошибка автозакрепления:", err));
+                }
+            }).catch(err => console.error("Ошибка сети Telegram:", err));
 
         document.getElementById('taskName').value = '';
         document.getElementById('taskOwner').value = '';
         document.getElementById('taskComment').value = '';
     }
 
+    // Завершение задачи (Удаление старого пина + Перенос в архив + Новый отчет БЕЗ ЗАКРЕПЛЕНИЯ)
     function deleteTask(index) {
         const completedTask = tasks[index];
+        
+        // 1. Открепляем и удаляем старое уведомление о назначении задачи
+        if (completedTask.tgMessageId) {
+            const unpinUrl = `https://api.telegram.org/bot${TG_TOKEN}/unpinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${completedTask.tgMessageId}`;
+            fetch(unpinUrl).then(() => {
+                const deleteUrl = `https://api.telegram.org/bot${TG_TOKEN}/deleteMessage?chat_id=${TG_CHAT_ID}&message_id=${completedTask.tgMessageId}`;
+                fetch(deleteUrl).catch(err => console.error("Ошибка удаления сообщения:", err));
+            }).catch(err => console.error("Ошибка открепления сообщения:", err));
+        }
+
+        // 2. Переводим в архив базы данных
+        completedTask.status = "Готово";
+        archiveTasks.push(completedTask);
         tasks.splice(index, 1);
         saveAndRender();
 
-        let priorityIcon = completedTask.priority === "Высокий" ? "🔴" : (completedTask.priority === "Средний" ? "🟡" : "🟢");
+        // 3. Отправляем финальный отчет. Вторым параметром передаем 'false' — БОТ НЕ БУДЕТ ЗАКРЕПЛЯТЬ ЭТО СООБЩЕНИЕ
         let message = `✅ ЗАДАЧА ВЫПОЛНЕНА И СНЯТА\n\n• Название: ${completedTask.name}\n• Исполнитель: @${completedTask.owner}\n• Была запланирована до: ${completedTask.deadline}`;
-        sendTelegram(message);
+        if (completedTask.comment) message += `\n• Комментарий: ${completedTask.comment}`;
+        
+        sendTelegram(message, false); 
+    }
+
+    // --- ЛОГИКА АРХИВА ---
+    function renderArchive() {
+        const tbody = document.getElementById('archiveTableBody');
+        tbody.innerHTML = '';
+        archiveTasks.forEach((task, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><del style="color: #888;">${task.name}</del></td>
+                    <td><span class="owner-tag" style="opacity: 0.7;">👤 @${task.owner}</span></td>
+                    <td><span style="color: #888;">${task.deadline}</span></td>
+                    <td><span class="priority-badge p-low">Готово</span></td>
+                    <td><span style="color: #aaa; font-style: italic;">${task.comment || '—'}</span></td>
+                    <td><button class="delete-btn" onclick="clearFromArchive(${index})" title="Удалить из архива навсегда">×</button></td>
+                </tr>`;
+        });
+    }
+
+    function clearFromArchive(index) {
+        if (confirm("Удалить эту задачу из архива базы данных навсегда?")) {
+            archiveTasks.splice(index, 1);
+            saveAndRender();
+        }
     }
 
     // --- ЛОГИКА КАЛЕНДАРЯ ---
@@ -541,7 +617,7 @@
         sendTelegram(`❌ Событие отменено: "${deleted.name}" (${deleted.date})`);
     }
 
-    // --- ЛОГИКА ФИНАНСОВ (ДОХОДЫ И РАСХОДЫ) ---
+    // --- ЛОГИКА ФИНАНСОВ ---
     function renderExpenses() {
         const tbody = document.getElementById('expensesTableBody');
         tbody.innerHTML = '';
@@ -549,7 +625,6 @@
         let totalIncomes = 0;
 
         expenses.forEach((exp, index) => {
-            // Для совместимости со старыми записями по умолчанию ставим тип "Расход"
             const type = exp.type || "Расход"; 
             const isIncome = type === "Доход";
 
@@ -617,6 +692,7 @@
         renderTasks();
         renderEvents();
         renderExpenses();
+        renderArchive();
     }
 
     // --- НАСТРОЙКИ И GOOGLE DRIVE ---
@@ -643,112 +719,4 @@
         try {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: clientId,
-                scope: 'https://www.googleapis.com/auth/drive.file',
-                callback: async (tokenResponse) => {
-                    if (tokenResponse.error !== undefined) {
-                        alert("Ошибка авторизации Google: " + tokenResponse.error);
-                        return;
-                    }
-                    accessToken = tokenResponse.access_token;
-                    document.getElementById('gdStatus').innerText = "🔄 Синхронизация...";
-                    document.getElementById('gdStatus').style.color = "#ffcc00";
-                    await startCloudSync();
-                },
-            });
-        } catch (err) {
-            console.error("Ошибка GIS Init:", err);
-        }
-    }
-
-    function handleCloudAuth() {
-        if (tokenClient) {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        }
-    }
-
-    async function startCloudSync() {
-        try {
-            const response = await fetch("https://www.googleapis.com/drive/v3/files?q=name='inflow_database.json' and trashed=false", {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            const result = await response.json();
-            
-            if (result.files && result.files.length > 0) {
-                gdFileId = result.files[0].id;
-                if (confirm("На Google Диске обнаружена база данных! Загрузить её на это устройство? (Локальные данные текущего браузера заменятся облачными)")) {
-                    const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${gdFileId}?alt=media`, {
-                        headers: { Authorization: `Bearer ${accessToken}` }
-                    });
-                    const cloudData = await fileResponse.json();
-                    
-                    tasks = cloudData.tasks || [];
-                    expenses = cloudData.expenses || [];
-                    events = cloudData.events || [];
-                    
-                    localStorage.setItem('inflow_tasks', JSON.stringify(tasks));
-                    localStorage.setItem('inflow_expenses', JSON.stringify(expenses));
-                    localStorage.setItem('inflow_events', JSON.stringify(events));
-                    
-                    renderTasks(); renderEvents(); renderExpenses();
-                }
-            } else {
-                if (confirm("База данных не найдена в облаке. Создать новый файл на Google Диске на основе данных этого устройства?")) {
-                    await createCloudFile();
-                }
-            }
-            document.getElementById('gdStatus').innerText = "🟢 Синхронизировано";
-            document.getElementById('gdStatus').style.color = "var(--success-color)";
-            document.getElementById('btnCloudAuth').style.display = 'none';
-        } catch (err) {
-            console.error("Ошибка облака:", err);
-            document.getElementById('gdStatus').innerText = "🔴 Ошибка";
-            document.getElementById('gdStatus').style.color = "#cc0000";
-        }
-    }
-
-    async function createCloudFile() {
-        const metadata = { name: 'inflow_database.json', mimeType: 'application/json' };
-        const data = { tasks, expenses, events };
-        const boundary = 'inflow_boundary';
-        const delimiter = `\r\n--${boundary}\r\n`;
-        const close_delim = `\r\n--${boundary}--`;
-        
-        const multipartBody =
-            delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) +
-            delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(data) + close_delim;
-
-        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': `multipart/related; boundary=${boundary}`
-            },
-            body: multipartBody
-        });
-        const file = await response.json();
-        gdFileId = file.id;
-    }
-
-    async function updateCloudFile() {
-        const data = { tasks, expenses, events };
-        fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdFileId}?uploadType=media`, {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        }).catch(err => console.error("Ошибка автосохранения в облако:", err));
-    }
-
-    window.onload = function() {
-        loadConfig();
-        saveAndRender();
-        document.getElementById('taskDeadline').valueAsDate = new Date();
-        document.getElementById('expDate').valueAsDate = new Date();
-        document.getElementById('eventDate').valueAsDate = new Date();
-        initGoogleDriveClient();
-    };
-</script>
-</body>
-</html>
+                scope: '
