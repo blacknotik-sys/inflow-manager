@@ -42,20 +42,18 @@
         .form-group input[placeholder="Задача"], .form-group input[placeholder="Заметки"], .form-group input[placeholder="Описание транзакции"], .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] { flex: 2 1 220px; }
         .form-group button.add-btn { flex: 1 1 100%; background: var(--accent-color); color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; padding: 12px; min-height: 44px; }
         input:focus, select:focus { outline: 2px solid var(--accent-color); }
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 850px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
         th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
         tr:hover { background: rgba(255,255,255,0.02); }
         
-        /* Изменение 3: Заметки и комментарии в таблицах жирным шрифтом */
         .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #fff; font-size: 0.9rem; border-radius: 4px; min-width: 160px; font-weight: bold; }
         .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
         
         .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
         .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
         
-        /* Изменение 2: Стильная кнопка вместо громоздкой ссылки календаря */
         .btn-cal-link {
             display: inline-block;
             padding: 8px 14px;
@@ -87,7 +85,6 @@
         .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
         .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
 
-        /* Изменение 1: Эффект размытия (Blur) для конфиденциальных полей */
         .blur-sensitive {
             filter: blur(5px);
             transition: filter 0.2s ease;
@@ -194,18 +191,36 @@
             <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
             <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
         </div>
+        
+        <h3>Предстоящие события</h3>
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
                         <th style="width: 12%;">Дата</th>
-                        <th style="width: 20%;">Событие</th>
+                        <th style="width: 22%;">Событие</th>
                         <th style="width: 18%;">Где</th>
                         <th style="width: 28%;">Комментарий / Детали</th>
-                        <th style="width: 22%;">Действия</th>
+                        <th style="width: 20%;">Действия</th>
                     </tr>
                 </thead>
                 <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
+
+        <h3>✅ Завершенные мероприятия (Архив)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 22%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 38%;">Итоги / Расходы / Заметки для анализа</th>
+                        <th style="width: 10%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedCalendarTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -295,7 +310,7 @@
     let CLOUD_BIN_ID = SafeStorage.getItem('inflow_bin_id') || DEFAULT_BIN_ID;
     let CLOUD_API_KEY = SafeStorage.getItem('inflow_api_key') || DEFAULT_API_KEY;
 
-    let tasks = [], archivedTasks = [], financeTransactions = [], events = [];
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [], archivedEvents = [];
 
     function escapeHTML(str) {
         if (!str) return '';
@@ -317,6 +332,7 @@
             tasks = JSON.parse(SafeStorage.getItem('inflow_tasks')) || [];
             archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
             events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
+            archivedEvents = JSON.parse(SafeStorage.getItem('inflow_archived_events')) || [];
             financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
         } catch (e) {}
     }
@@ -326,6 +342,7 @@
         SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
         SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
         SafeStorage.setItem('inflow_events', JSON.stringify(events));
+        SafeStorage.setItem('inflow_archived_events', JSON.stringify(archivedEvents));
     }
 
     function switchTab(tabId, btnElement) {
@@ -400,6 +417,7 @@
     function updateTaskComment(index, val) { if(tasks[index]) { tasks[index].comment = val; saveData(); } }
     function updateArchiveComment(index, val) { if(archivedTasks[index]) { archivedTasks[index].comment = val; saveData(); } }
     function updateEventComment(index, val) { if(events[index]) { events[index].comment = val; saveData(); } }
+    function updateArchivedEventComment(index, val) { if(archivedEvents[index]) { archivedEvents[index].comment = val; saveData(); } }
 
     function addTask() {
         const name = document.getElementById('taskName').value.trim();
@@ -436,16 +454,41 @@
         const tbody = document.getElementById('calendarTableBody');
         if (!tbody) return; tbody.innerHTML = '';
         events.sort((a, b) => new Date(a.date) - new Date(b.date));
-        events.forEach((ev, index) => {
-            const calLink = generateGoogleCalendarLink(ev);
-            tbody.innerHTML += `<tr>
-                <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
-                <td><b>${escapeHTML(ev.name)}</b></td>
+        if (events.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Предстоящих событий нет.</td></tr>`;
+        } else {
+            events.forEach((ev, index) => {
+                const calLink = generateGoogleCalendarLink(ev);
+                tbody.innerHTML += `<tr>
+                    <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
+                    <td><b>${escapeHTML(ev.name)}</b></td>
+                    <td>${escapeHTML(ev.location)}</td>
+                    <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
+                    <td style="white-space:nowrap;">
+                        <a href="${calLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
+                        <button class="complete-btn" onclick="archiveEvent(${index})" style="padding: 6px 12px; margin-left: 4px;">✓</button>
+                    </td>
+                </tr>`;
+            });
+        }
+    }
+
+    function renderArchivedEvents() {
+        const tbody = document.getElementById('archivedCalendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        archivedEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (archivedEvents.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Архив мероприятий пуст.</td></tr>`;
+            return;
+        }
+        archivedEvents.forEach((ev, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(ev.date)}</span></td>
+                <td><del>${escapeHTML(ev.name)}</del></td>
                 <td>${escapeHTML(ev.location)}</td>
-                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
-                <td style="white-space:nowrap;">
-                    <a href="${calLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
-                    <button class="delete-btn" onclick="deleteEvent(${index})" style="padding: 6px 12px; margin-left: 4px;">×</button>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" placeholder="Внести итоги/гонорары/расходы..." onchange="updateArchivedEventComment(${index}, this.value)"></td>
+                <td>
+                    <button class="delete-btn" onclick="deleteArchivedEvent(${index})" style="padding: 6px 12px;">×</button>
                 </td>
             </tr>`;
         });
@@ -469,7 +512,20 @@
         document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
     }
 
-    function deleteEvent(index) { events.splice(index, 1); saveData(); renderEvents(); }
+    function archiveEvent(index) {
+        if(!events[index]) return;
+        archivedEvents.push(events[index]);
+        sendTelegram(`✅ Мероприятие завершено: "${events[index].name}" (${events[index].date})`, false);
+        events.splice(index, 1);
+        saveData(); renderEvents(); renderArchivedEvents();
+    }
+
+    function deleteArchivedEvent(index) {
+        if(confirm("Удалить это мероприятие из архива окончательно?")) {
+            archivedEvents.splice(index, 1);
+            saveData(); renderArchivedEvents();
+        }
+    }
 
     function renderFinance() {
         const tbody = document.getElementById('financeTableBody');
@@ -539,7 +595,7 @@
         const apiKey = document.getElementById('cfgApiKey').value.trim();
         if (!binId || !apiKey) return alert("Заполните Bin ID и Master Key в настройках!");
 
-        const payload = { tasks, archivedTasks, financeTransactions, events };
+        const payload = { tasks, archivedTasks, financeTransactions, events, archivedEvents };
 
         fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
             method: 'PUT',
@@ -578,6 +634,7 @@
                 archivedTasks = data.record.archivedTasks || [];
                 financeTransactions = data.record.financeTransactions || [];
                 events = data.record.events || [];
+                archivedEvents = data.record.archivedEvents || [];
                 saveData(); 
                 renderAllTables();
                 alert("База данных успешно загружена из облака!");
@@ -592,7 +649,7 @@
     }
 
     function exportData() {
-        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events, archivedEvents }, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json';
@@ -610,6 +667,7 @@
                 archivedTasks = imported.archivedTasks || [];
                 financeTransactions = imported.financeTransactions || [];
                 events = imported.events || [];
+                archivedEvents = imported.archivedEvents || [];
                 saveData(); renderAllTables();
                 alert("База данных успешно восстановлена!");
             } catch(err) { alert("Ошибка чтения файла. Убедитесь, что выбрали правильный .json бэкап."); }
@@ -620,12 +678,12 @@
     function resetAllData() {
         if(confirm("Удалить все данные программы? Внимание: финансы и задачи сотрутся.")) {
             SafeStorage.clear();
-            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
+            tasks = []; archivedTasks = []; financeTransactions = []; events = []; archivedEvents = [];
             renderAllTables();
         }
     }
 
-    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderFinance(); }
+    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderArchivedEvents(); renderFinance(); }
 
     function initApp() {
         loadLocalStorage();
