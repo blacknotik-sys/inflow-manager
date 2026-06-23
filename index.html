@@ -44,7 +44,7 @@
             margin: 50px auto;
             text-align: center;
         }
-        #auth-screen h2 { margin-top: 0; color: #fff; }
+        #auth-screen h2 { margin-top: 0; color: #fff; font-size: 1.3rem; }
         #auth-screen input {
             width: 100%; padding: 15px; background: #2a2a2a; border: 1px solid var(--border-color);
             color: #fff; border-radius: 6px; font-size: 1.2rem; text-align: center; margin-bottom: 15px;
@@ -56,7 +56,7 @@
         #auth-screen button:hover { background: #e62e5c; }
         .error-msg { color: var(--danger-color); margin-top: 10px; font-weight: bold; }
 
-        /* Основное приложение (скрыто до ввода пароля) */
+        /* Основное приложение */
         #app-body { display: none; }
 
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -118,12 +118,11 @@
             .summary-box { text-align: center; }
         }
     </style>
-    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
 
 <div id="auth-screen">
-    <h2>🔒 Вход в защищенную базу INFLOW</h2>
+    <h2>🔒 Вход в защищенную базу данных INFLOW</h2>
     <input type="password" id="passInput" placeholder="Введите пароль" autofocus>
     <button onclick="checkPassword()">Войти</button>
     <div id="authError" class="error-msg"></div>
@@ -292,8 +291,8 @@
         </div>
         
         <div class="settings-card">
-            <h3>☁️ Синхронизация с Google Drive (Mobile-Friendly)</h3>
-            <p style="font-size: 0.9rem; color: #aaa;">Храните файл базы данных `inflow_secure_db.json` прямо на вашем Google Диске для доступа с телефона и компьютера.</p>
+            <h3>☁️ Синхронизация с Google Drive</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Храните файл базы данных `inflow_secure_db.json` прямо на вашем Google Диске.</p>
             
             <label>Client ID (из Google Cloud Console):<br>
             <input type="text" id="cfgGClientId" placeholder="Вставьте ваш Client ID...apps.googleusercontent.com"></label>
@@ -304,15 +303,15 @@
             </div>
             
             <div style="display: flex; gap: 6px; margin-top: 10px;">
-                <button class="tab-btn" style="background: #008CBA; border:none; color:#fff; flex:1;" onclick="uploadToG সূর্য()">⬆️ Сохранить на Google Диск</button>
+                <button class="tab-btn" style="background: #008CBA; border:none; color:#fff; flex:1;" onclick="uploadToGDrive()">⬆️ Сохранить на Google Диск</button>
                 <button class="tab-btn" style="background: #4CAF50; border:none; color:#fff; flex:1;" onclick="downloadFromGDirect()">⬇️ Загрузить с Google Диска</button>
             </div>
             <p id="gStatus" style="font-size: 0.85rem; color: #aaa; margin-top: 10px;"></p>
         </div>
 
         <div class="settings-card">
-            <h3>🔄 Автономный импорт / Экспорт Базы (Резервная копия)</h3>
-            <p style="font-size: 0.9rem; color: #aaa;">Создайте зашифрованный файл-бэкап локально на случай отсутствия интернета.</p>
+            <h3>🔄 Автономный импорт / Экспорт Базы</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Создайте локальный бэкап-файл на телефоне или компьютере.</p>
             <button class="tab-btn" style="margin-bottom: 10px;" onclick="exportData()">📥 Сохранить бэкап (.json)</button>
             <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
             <button class="tab-btn" style="background: #444;" onclick="document.getElementById('importFile').click()">📤 Загрузить бэкап из файла</button>
@@ -331,4 +330,120 @@
 
     // Проверка пароля сессии
     function checkPassword() {
-        const pass = document.getElementById('pass
+        const pass = document.getElementById('passInput').value.trim();
+        if (pass === "1234321") {
+            SafeStorage.setItem('inflow_auth_session', 'authorized_yes');
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-body').style.display = 'block';
+            
+            // Динамически подгружаем API Google Диска после успешного ввода пароля
+            const script = document.createElement('script');
+            script.src = "https://apis.google.com/js/api.js";
+            script.onload = () => {
+                gapi.load('client:auth2', initClient);
+            };
+            document.head.appendChild(script);
+            
+            initApp();
+        } else {
+            document.getElementById('authError').innerText = "❌ Неверный пароль!";
+        }
+    }
+
+    // Автоматический вход, если сессия уже валидна
+    if (SafeStorage.getItem('inflow_auth_session') === 'authorized_yes') {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-body').style.display = 'block';
+        
+        // Подгружаем API при наличии сессии
+        const script = document.createElement('script');
+        script.src = "https://apis.google.com/js/api.js";
+        script.onload = () => {
+            gapi.load('client:auth2', initClient);
+        };
+        document.head.appendChild(script);
+
+        initApp();
+    }
+
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+    let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    // Настройки Google Drive API
+    let CLIENT_ID = SafeStorage.getItem('g_client_id') || '';
+    const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+    const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [], archivedEvents = [];
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeMarkdownV2(str) {
+        if (!str) return '';
+        return String(str).replace(/([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])/g, '\\$1');
+    }
+
+    function sendTelegram(text, shouldPin = false) {
+        if(!TG_TOKEN || !TG_CHAT_ID) return;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=MarkdownV2`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (shouldPin && data.ok && data.result?.message_id) {
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
+            }
+        }).catch(err => console.error(err));
+    }
+
+    function loadLocalStorage() {
+        try {
+            tasks = JSON.parse(SafeStorage.getItem('inflow_tasks')) || [];
+            archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
+            events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
+            archivedEvents = JSON.parse(SafeStorage.getItem('inflow_archived_events')) || [];
+            financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
+        } catch (e) {}
+    }
+
+    function saveData() {
+        SafeStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        SafeStorage.setItem('inflow_events', JSON.stringify(events));
+        SafeStorage.setItem('inflow_archived_events', JSON.stringify(archivedEvents));
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
+    }
+
+    function resolveTelegramTag(ownerName) {
+        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
+        const lowerName = String(ownerName).trim().toLowerCase();
+        if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
+        if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
+        if (lowerName === 'серж' || lowerName === 'сергей') return { display: 'Серж', tg: '@Serjblacknote' };
+        return { display: ownerName, tg: ownerName };
+    }
+
+    function generateGoogleCalendarLink(ev) {
+        if(!ev.date || !ev.name) return '#';
+        const cleanDate = ev.date.replace(/-/g, '');
+        const datesParam = `${cleanDate}/${cleanDate}`; 
+        const title = encodeURIComponent(ev.name);
+        const location = encodeURIComponent(ev.location || '');
+        const details = encodeURIComponent(ev.comment || '');
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
+    }
+
+    function renderTasks() {
+        const tbody = document.getElementById('tasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (tasks.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">
