@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InFlow Press Kit & Manager</title>
+    <title>InFlow Band Manager Local</title>
     <style>
         *, *:before, *:after { box-sizing: border-box; }
         :root {
@@ -12,95 +12,68 @@
             --accent-color: #ff3366;
             --text-color: #e0e0e0;
             --border-color: #333;
-            --btn-sub: #2a2a2a;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 900px; margin: 0 auto; width: 100%; }
-        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid var(--accent-color); padding-bottom: 15px; }
-        h1 { margin: 0; font-size: 2.2rem; letter-spacing: 1px; color: #fff; }
+        .container { max-width: 1250px; margin: 0 auto; width: 100%; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        h1 { margin: 0; font-size: 2rem; letter-spacing: 1px; color: #fff; }
         h1 span { color: var(--accent-color); }
-        
-        /* Вкладки */
-        .tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn {
-            flex: 1; background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--border-color);
-            padding: 14px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: all 0.2s ease;
-            font-size: 1rem; text-align: center;
+            flex: 1 1 auto; background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--border-color);
+            padding: 12px 15px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: all 0.2s ease;
+            font-size: 0.95rem; min-height: 44px; display: flex; align-items: center; justify-content: center;
         }
         .tab-btn.active, .tab-btn:hover { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
-        
-        .tab-content { display: none; background: var(--panel-bg); padding: 25px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-        .tab-content.active { display: block; }
-        
-        .settings-card { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; }
-        .settings-card h3 { margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .tab-content { display: none; background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .tab-content.active { display: block !important; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .form-group input, .form-group select { flex: 1 1 140px; min-width: 110px; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 1rem; min-height: 44px; }
+        .form-group input[placeholder="Задача"], .form-group input[placeholder="Заметки"], .form-group input[placeholder="Описание транзакции"], .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] { flex: 2 1 220px; }
+        .form-group button.add-btn { flex: 1 1 100%; background: var(--accent-color); color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; padding: 12px; min-height: 44px; }
+        input:focus, select:focus { outline: 2px solid var(--accent-color); }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 850px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
+        th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #ccc; font-size: 0.9rem; border-radius: 4px; min-width: 160px; }
+        .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
+        .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
+        .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
+        .cal-link-btn { background: #2a7af3; color: #fff; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-block; }
+        .finance-summary { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: flex-end; }
+        .summary-box { background: #222; padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 1.1rem; font-weight: bold; }
+        .summary-box.income-box span { color: var(--success-color); }
+        .summary-box.expense-box span { color: var(--danger-color); }
+        .summary-box.balance-box span { color: #00fff0; }
+        .event-tag { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; background: #444; color: #fff; font-weight: bold; }
+        .archived-tr { opacity: 0.6; }
+        .income-tr { background-color: rgba(40, 167, 69, 0.03); }
+        .expense-tr { background-color: rgba(220, 53, 69, 0.03); }
+        .settings-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px; }
         .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
-        
-        .social-link-item { display: flex; gap: 15px; margin-bottom: 12px; align-items: center; }
-        .social-link-item span { width: 150px; font-weight: bold; font-size: 0.95rem; }
-        .social-link-item input { flex: 1; padding: 10px; background: var(--btn-sub); border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 1rem; }
-        
-        .bio-text { width: 100%; height: 140px; background: #222; color: #fff; border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; font-family: inherit; font-size: 1rem; resize: vertical; }
-        
-        .lang-switcher { display: flex; gap: 10px; margin-bottom: 12px; }
-        .lang-btn { flex: 1; padding: 8px; background: #1e1e1e; color: #fff; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .lang-btn.active { background: var(--accent-color); border-color: var(--accent-color); }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .form-group-full { margin-bottom: 15px; }
-        .form-group-full label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #aaa; }
-        
-        .form-group { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; }
-        .form-group input, .form-group select { flex: 1; padding: 12px; background: var(--btn-sub); border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 1rem; }
-        .form-group button { padding: 12px 20px; background: var(--accent-color); color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        
-        .generated-output { width: 100%; height: 350px; background: #111; color: #00ffcc; border: 1px solid #444; padding: 15px; font-family: monospace; font-size: 0.95rem; margin-top: 15px; border-radius: 6px; white-space: pre-wrap; }
-        
-        /* Стили таблиц и кнопок календаря */
-        .cal-table-container { overflow-x: auto; margin-top: 15px; }
-        .cal-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .cal-table th, .cal-table td { padding: 12px; border-bottom: 1px solid var(--border-color); }
-        .cal-table th { background: #111; color: #fff; }
-        
-        /* КРАСИВАЯ КНОПКА В ТАБЛИЦЕ КАЛЕНДАРЯ */
-        .btn-cal-link {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: var(--accent-color);
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: background 0.2s ease, transform 0.1s ease;
-            text-align: center;
-            white-space: nowrap;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-cal-link:hover { background-color: #e02a58; }
-        .btn-cal-link:active { transform: scale(0.97); }
+        .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
 
-        .btn-action { padding: 10px 16px; background: var(--btn-sub); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-action:hover { background: #3a3a3a; }
-
-        input:focus, textarea:focus { outline: 2px solid var(--accent-color); }
-        
         @media (max-width: 768px) {
-            body { padding: 10px; }
-            h1 { font-size: 1.6rem; }
-            .tabs { flex-direction: column; }
-            .social-link-item { flex-direction: column; align-items: stretch; gap: 5px; }
-            .social-link-item span { width: auto; }
-            .form-grid { grid-template-columns: 1fr; gap: 10px; }
-            .form-group { flex-direction: column; align-items: stretch; gap: 10px; }
+            body { padding: 8px; }
+            h1 { font-size: 1.5rem; }
+            .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+            .tabs button:nth-child(5) { grid-column: span 2; }
+            .form-group { display: flex !important; flex-direction: column !important; gap: 10px; padding: 12px; }
+            .form-group input, .form-group select, .form-group button.add-btn { width: 100% !important; flex: none !important; font-size: 16px !important; }
+            .table-comment-input { font-size: 16px !important; }
+            .finance-summary { flex-direction: column; align-items: stretch; }
+            .summary-box { text-align: center; }
         }
     </style>
 </head>
@@ -108,171 +81,166 @@
 
 <div class="container">
     <header>
-        <h1>INFLOW <span>| Press Kit & Manager</span></h1>
+        <h1>INFLOW <span>| Band Manager</span></h1>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('socials', this)">🔗 Соцсети</button>
-        <button class="tab-btn" onclick="switchTab('presskit', this)">📖 Био и Состав</button>
-        <button class="tab-btn" onclick="switchTab('applications', this)">📝 Заявления</button>
+        <button class="tab-btn active" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
+        <button class="tab-btn" onclick="switchTab('archive', this)">📁 Архив задач</button>
         <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Календарь</button>
-        <button class="tab-btn" onclick="switchTab('tasks', this)">📋 Задачи</button>
+        <button class="tab-btn" onclick="switchTab('finance', this)">💵 Финансы</button>
+        <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
     </div>
 
-    <div id="socials" class="tab-content active">
-        <h2>Ссылки на социальные сети и платформы</h2>
-        <p style="color: #aaa; margin-bottom: 20px;">Данные сохраняются в браузере вашего устройства.</p>
-        <div class="settings-card">
-            <div class="social-link-item">
-                <span>YouTube (Канал):</span>
-                <input type="text" id="socialYoutube" value="https://youtube.com/@inflow_band" placeholder="https://youtube.com/@inflow_band..." onchange="saveSocialLinks()">
-            </div>
-            <div class="social-link-item">
-                <span>Instagram:</span>
-                <input type="text" id="socialInstagram" placeholder="https://instagram.com/..." onchange="saveSocialLinks()">
-            </div>
-            <div class="social-link-item">
-                <span>Facebook:</span>
-                <input type="text" id="socialFacebook" placeholder="https://facebook.com/..." onchange="saveSocialLinks()">
-            </div>
-            <div class="social-link-item">
-                <span>TikTok:</span>
-                <input type="text" id="socialTiktok" placeholder="https://tiktok.com/..." onchange="saveSocialLinks()">
-            </div>
-            <div class="social-link-item">
-                <span>Linktree / Website:</span>
-                <input type="text" id="socialWeb" placeholder="https://linktr.ee/..." onchange="saveSocialLinks()">
-            </div>
+    <div id="tasks" class="tab-content active">
+        <h2>Менеджер активных задач</h2>
+        <div class="form-group">
+            <select id="taskCategory">
+                <option value="Организация">Организация</option>
+                <option value="Творчество">Творчество</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Концерты">Концерты</option>
+                <option value="Студия">Студия</option>
+                <option value="PR / Продвижение">PR / Продвижение</option>
+            </select>
+            <input type="text" id="taskName" placeholder="Задача">
+            <input type="text" id="taskOwner" placeholder="Кто делает">
+            <input type="date" id="taskDeadline">
+            <select id="taskPriority">
+                <option value="Низкий">Низкий</option>
+                <option value="Средний">Средний</option>
+                <option value="Высокий">Высокий</option>
+            </select>
+            <input type="text" id="taskComment" placeholder="Заметки">
+            <button class="add-btn" onclick="addTask()">Добавить задачу (+)</button>
         </div>
-    </div>
-
-    <div id="presskit" class="tab-content">
-        <h2>Материалы для организаторов (Press Kit)</h2>
-        
-        <div class="settings-card">
-            <h3>📖 Биография группы</h3>
-            <div class="lang-switcher">
-                <button class="lang-btn active" onclick="switchLang('Bio', 'ru')" id="btnBioRu">RU</button>
-                <button class="lang-btn" onclick="switchLang('Bio', 'en')" id="btnBioEn">EN</button>
-                <button class="lang-btn" onclick="switchLang('Bio', 'ro')" id="btnBioRo">RO</button>
-            </div>
-            <textarea id="bioRu" class="bio-text" onchange="saveBios()" placeholder="Биография на русском...">InFlow — это melodic metal / modern rock группа, основанная в...</textarea>
-            <textarea id="bioEn" class="bio-text" onchange="saveBios()" style="display:none;" placeholder="Biography in English...">InFlow is a melodic metal / modern rock band founded in...</textarea>
-            <textarea id="bioRo" class="bio-text" onchange="saveBios()" style="display:none;" placeholder="Biografie în română...">InFlow este o trupă de melodic metal / modern rock fondată în...</textarea>
-        </div>
-
-        <div class="settings-card">
-            <h3>👥 Состав группы (Line-up)</h3>
-            <div class="lang-switcher">
-                <button class="lang-btn active" onclick="switchLang('Lineup', 'ru')" id="btnLineupRu">RU</button>
-                <button class="lang-btn" onclick="switchLang('Lineup', 'en')" id="btnLineupEn">EN</button>
-                <button class="lang-btn" onclick="switchLang('Lineup', 'ro')" id="btnLineupRo">RO</button>
-            </div>
-            <textarea id="lineupRu" class="bio-text" onchange="saveLineups()" placeholder="Состав на русском...">• Татьяна Ангел — Вокал&#10;• Андрей Пынзару — Гитара&#10;• Сергей ... — Бас / Ударные</textarea>
-            <textarea id="lineupEn" class="bio-text" onchange="saveLineups()" style="display:none;" placeholder="Line-up in English..">&#10;• Tatiana Anghel — Vocals&#10;• Andrei Pynzaru — Guitar&#10;• Sergei ... — Bass / Drums</textarea>
-            <textarea id="lineupRo" class="bio-text" onchange="saveLineups()" style="display:none;" placeholder="Componența în română..">&#10;• Tatiana Anghel — Voce&#10;• Andrei Pînzaru — Chitara&#10;• Serghei ... — Bas / Tobe</textarea>
-        </div>
-    </div>
-
-    <div id="applications" class="tab-content">
-        <h2>Заявление на концерт / фестиваль</h2>
-        <p style="color: #aaa; margin-bottom: 15px;">Универсальная расширенная форма для подачи заявок организаторам.</p>
-        
-        <div class="settings-card" style="background: rgba(255,255,255,0.04);">
-            <div class="form-grid">
-                <div class="form-group-full">
-                    <label>Название фестиваля / площадки:</label>
-                    <input type="text" id="festName" placeholder="Например: Summer Fest 2026">
-                </div>
-                <div class="form-group-full">
-                    <label>Язык бланка заявки:</label>
-                    <select id="festLang">
-                        <option value="ru">Русский (RU)</option>
-                        <option value="en">Английский (EN)</option>
-                        <option value="ro">Румынский (RO)</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group-full">
-                    <label>Ссылки на релизы/синглы (послушать):</label>
-                    <input type="text" id="extReleases" placeholder="YouTube, Bandcamp, SoundCloud, Ссылка на диск...">
-                </div>
-                <div class="form-group-full">
-                    <label>Контакты для связи (Telegram/Телефон/Email):</label>
-                    <input type="text" id="extContacts" placeholder="@manager_name или +373...">
-                </div>
-            </div>
-
-            <div class="form-group-full" style="margin-bottom: 15px;">
-                <label>Доп. требования (Райдер / Видео с лайвов и др.):</label>
-                <input type="text" id="extRider" placeholder="Например: Сценический райдер готов по запросу. Есть лайв-видео.">
-            </div>
-
-            <button onclick="generateApplication()" style="width: 100%; padding: 14px; background: var(--accent-color); color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">Сгенерировать расширенную заявку 🪄</button>
-            
-            <textarea class="generated-output" id="festOutput" readonly placeholder="Здесь появится готовый расширенный текст заявления..."></textarea>
-        </div>
-    </div>
-
-    <div id="calendar" class="tab-content">
-        <h2>📅 Календарь концертов и событий</h2>
-        
-        <div class="settings-card">
-            <h3>Добавить событие</h3>
-            <div class="form-grid">
-                <div class="form-group-full">
-                    <label>Дата:</label>
-                    <input type="date" id="calDate">
-                </div>
-                <div class="form-group-full">
-                    <label>Название события / фестиваля:</label>
-                    <input type="text" id="calTitle" placeholder="InFlow @ Club или Fest">
-                </div>
-            </div>
-            <div class="form-grid">
-                <div class="form-group-full">
-                    <label>Место / Клуб / Город:</label>
-                    <input type="text" id="calLocation" placeholder="Например: Кишинев, Albion">
-                </div>
-                <div class="form-group-full">
-                    <label>Описание (детали, тайминг):</label>
-                    <input type="text" id="calDesc" placeholder="Чек в 18:00, выход в 20:00">
-                </div>
-            </div>
-            <button class="btn-action" onclick="addEvent()">Добавить событие (+)</button>
-        </div>
-
-        <div class="cal-table-container">
-            <table class="cal-table">
+        <h3>Текущие дела</h3>
+        <div class="table-wrapper">
+            <table>
                 <thead>
                     <tr>
-                        <th>Дата</th>
-                        <th>Событие</th>
-                        <th>Место</th>
-                        <th>Описание</th>
-                        <th>Действие</th>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 26%;">Задача</th>
+                        <th style="width: 14%;">Кто</th>
+                        <th style="width: 12%;">Дедлайн</th>
+                        <th style="width: 12%;">Приоритет</th>
+                        <th style="width: 14%;">Комментарий</th>
+                        <th style="width: 8%;">Действия</th>
                     </tr>
                 </thead>
-                <tbody id="calEventsList">
-                    </tbody>
+                <tbody id="tasksTableBody"></tbody>
             </table>
         </div>
     </div>
 
-    <div id="tasks" class="tab-content">
-        <h2>📋 Список задач и орг. дел</h2>
+    <div id="archive" class="tab-content">
+        <h2>📁 Архив выполненных задач</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 26%;">Задача</th>
+                        <th style="width: 14%;">Кто сделал</th>
+                        <th style="width: 12%;">Дедлайн</th>
+                        <th style="width: 26%;">Финальный комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedTasksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="calendar" class="tab-content">
+        <h2>Календарь мероприятий</h2>
+        <div class="form-group">
+            <input type="date" id="eventDate">
+            <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
+            <input type="text" id="eventLocation" placeholder="Место / Клуб">
+            <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
+            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 20%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 28%;">Комментарий / Детали</th>
+                        <th style="width: 22%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="finance" class="tab-content">
+        <h2>Управление финансами</h2>
+        <div class="form-group">
+            <input type="date" id="finDate">
+            <select id="finType">
+                <option value="Расход">💸 Расход</option>
+                <option value="Доход">💰 Доход</option>
+            </select>
+            <select id="finCategory">
+                <option value="Концерты / Гонорары">Концерты / Гонорары</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Студия / Сведение">Студия / Сведение</option>
+                <option value="Маркетинг / PR">Маркетинг / PR</option>
+                <option value="Мерч">Мерч</option>
+                <option value="Оборудование">Оборудование</option>
+                <option value="Другое">Другое</option>
+            </select>
+            <input type="text" id="finDesc" placeholder="Описание">
+            <input type="number" id="finAmount" placeholder="Сумма (MDL)">
+            <input type="text" id="finUser" placeholder="Кто внес">
+            <button class="add-btn" onclick="addFinanceTransaction()">Внести в бюджет (+)</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Дата</th><th>Тип</th><th>Категория</th><th>Описание</th><th>Сумма</th><th>Кто</th><th></th></tr>
+                </thead>
+                <tbody id="financeTableBody"></tbody>
+            </table>
+        </div>
+        <div class="finance-summary">
+            <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
+            <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
+            <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
+        </div>
+    </div>
+
+    <div id="settings" class="tab-content">
+        <h2>Настройки</h2>
         <div class="settings-card">
-            <h3>Добавить задачу</h3>
-            <div class="form-group">
-                <input type="text" id="taskInput" placeholder="Например: Опубликовать новый сингл">
-                <button class="btn-action" onclick="addTask()">Добавить</button>
+            <h3>🔔 Уведомления Telegram Bot</h3>
+            <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
+            <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
+            <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
+        </div>
+        
+        <div class="settings-card">
+            <h3>☁️ Облачная синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Синхронизируйте базу между iPhone и Mac через облако.</p>
+            <label>Bin ID: <input type="text" id="cfgBinId" placeholder="Вставьте ваш Bin ID"></label>
+            <label>Master Key: <input type="text" id="cfgApiKey" placeholder="Вставьте ваш Master Key"></label>
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                <button class="tab-btn" style="background: #008CBA; border:none; color:#fff;" onclick="uploadToCloud()">⬆️ Залить в облако</button>
+                <button class="tab-btn" style="background: #4CAF50; border:none; color:#fff;" onclick="downloadFromCloud()">⬇️ Забрать из облака</button>
             </div>
         </div>
+
         <div class="settings-card">
-            <h3>Активные задачи</h3>
-            <ul id="taskList" style="padding-left: 20px; font-size: 1.1rem;"></ul>
+            <h3>🔄 Импорт / Экспорт Базы</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Если вы заходите с другого телефона, просто загрузите сюда последний скачанный JSON файл.</p>
+            <button class="tab-btn" style="margin-bottom: 10px;" onclick="exportData()">📥 Сохранить бэкап (.json)</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+            <button class="tab-btn" style="background: #444;" onclick="document.getElementById('importFile').click()">📤 Загрузить бэкап из файла</button>
+            <button class="delete-btn" style="padding: 12px 24px; margin-top:15px; width:100%;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
         </div>
     </div>
 </div>
@@ -280,247 +248,371 @@
 <script>
     const SafeStorage = {
         getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
-        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+        clear() { try { localStorage.clear(); } catch (e) {} }
     };
 
-    let socialLinks = { youtube: 'https://youtube.com/@inflow_band', instagram: '', facebook: '', tiktok: '', web: '' };
-    let bios = { ru: '', en: '', ro: '' };
-    let lineups = { ru: '', en: '', ro: '' };
-    let events = [];
-    let tasks = [];
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+    let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    // Предустановка ваших облачных ключей (подставлены переданные вами значения)
+    const DEFAULT_BIN_ID = "6a39adc0f5f4af5e291faa4a";
+    const DEFAULT_API_KEY = "$2a$10$Jom.BcYqfZkDu4bXqE9NR.8FtpsrY8By73AU4.Qqe.hsrBh4EVGTi";
+    let CLOUD_BIN_ID = SafeStorage.getItem('inflow_bin_id') || DEFAULT_BIN_ID;
+    let CLOUD_API_KEY = SafeStorage.getItem('inflow_api_key') || DEFAULT_API_KEY;
+
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [];
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sendTelegram(text, shouldPin = false) {
+        if(!TG_TOKEN || !TG_CHAT_ID) return;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (shouldPin && data.ok && data.result?.message_id) {
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
+            }
+        }).catch(err => console.error(err));
+    }
+
+    function loadLocalStorage() {
+        try {
+            tasks = JSON.parse(SafeStorage.getItem('inflow_tasks')) || [];
+            archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
+            events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
+            financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
+        } catch (e) {}
+    }
+
+    function saveData() {
+        SafeStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        SafeStorage.setItem('inflow_events', JSON.stringify(events));
+    }
 
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        btnElement.classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
     }
 
-    function switchLang(prefix, lang) {
-        ['ru', 'en', 'ro'].forEach(l => {
-            const el = document.getElementById(prefix.toLowerCase() + l.toUpperCase());
-            if (el) el.style.display = (l === lang) ? 'block' : 'none';
-            const btn = document.getElementById('btn' + prefix + l.toUpperCase());
-            if (btn) btn.classList.toggle('active', l === lang);
-        });
+    function resolveTelegramTag(ownerName) {
+        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
+        const lowerName = String(ownerName).trim().toLowerCase();
+        if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
+        if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
+        if (lowerName === 'серж' || lowerName === 'сергей') return { display: 'Серж', tg: '@Serjblacknote' };
+        return { display: ownerName, tg: ownerName };
     }
 
-    function saveSocialLinks() {
-        socialLinks.youtube = document.getElementById('socialYoutube').value.trim();
-        socialLinks.instagram = document.getElementById('socialInstagram').value.trim();
-        socialLinks.facebook = document.getElementById('socialFacebook').value.trim();
-        socialLinks.tiktok = document.getElementById('socialTiktok').value.trim();
-        socialLinks.web = document.getElementById('socialWeb').value.trim();
-        localStorage.setItem('inflow_social_k', JSON.stringify(socialLinks));
-    }
-
-    function saveBios() {
-        bios.ru = document.getElementById('bioRu').value;
-        bios.en = document.getElementById('bioEn').value;
-        bios.ro = document.getElementById('bioRo').value;
-        localStorage.setItem('inflow_bios_k', JSON.stringify(bios));
-    }
-
-    function saveLineups() {
-        lineups.ru = document.getElementById('lineupRu').value;
-        lineups.en = document.getElementById('lineupEn').value;
-        lineups.ro = document.getElementById('lineupRo').value;
-        localStorage.setItem('inflow_lineups_k', JSON.stringify(lineups));
-    }
-
-    function saveEvents() {
-        localStorage.setItem('inflow_events_k', JSON.stringify(events));
-    }
-
-    function saveTasks() {
-        localStorage.setItem('inflow_tasks_k', JSON.stringify(tasks));
-    }
-
-    function loadData() {
-        if(SafeStorage.getItem('inflow_social_k')) socialLinks = JSON.parse(SafeStorage.getItem('inflow_social_k'));
-        if(SafeStorage.getItem('inflow_bios_k')) bios = JSON.parse(SafeStorage.getItem('inflow_bios_k'));
-        if(SafeStorage.getItem('inflow_lineups_k')) lineups = JSON.parse(SafeStorage.getItem('inflow_lineups_k'));
-        if(SafeStorage.getItem('inflow_events_k')) events = JSON.parse(SafeStorage.getItem('inflow_events_k'));
-        if(SafeStorage.getItem('inflow_tasks_k')) tasks = JSON.parse(SafeStorage.getItem('inflow_tasks_k'));
-
-        document.getElementById('socialYoutube').value = socialLinks.youtube || 'https://youtube.com/@inflow_band';
-        document.getElementById('socialInstagram').value = socialLinks.instagram || '';
-        document.getElementById('socialFacebook').value = socialLinks.facebook || '';
-        document.getElementById('socialTiktok').value = socialLinks.tiktok || '';
-        document.getElementById('socialWeb').value = socialLinks.web || '';
-
-        document.getElementById('bioRu').value = bios.ru || '';
-        document.getElementById('bioEn').value = bios.en || '';
-        document.getElementById('bioRo').value = bios.ro || '';
-
-        document.getElementById('lineupRu').value = lineups.ru || '';
-        document.getElementById('lineupEn').value = lineups.en || '';
-        document.getElementById('lineupRo').value = lineups.ro || '';
-
-        renderEvents();
-        renderTasks();
-    }
-
-    function generateApplication() {
-        const festName = document.getElementById('festName').value.trim();
-        const lang = document.getElementById('festLang').value;
-        
-        const releases = document.getElementById('extReleases').value.trim();
-        const contacts = document.getElementById('extContacts').value.trim();
-        const rider = document.getElementById('extRider').value.trim();
-
-        if(!festName) return alert('Укажите название фестиваля или площадки!');
-
-        let text = '';
-        let currentBio = bios[lang] || bios['ru'] || 'InFlow';
-        let currentLineup = lineups[lang] || lineups['ru'] || 'InFlow Line-up';
-        
-        if (lang === 'ru') {
-            text = `ЗАЯВКА НА УЧАСТИЕ В МЕРОПРИЯТИИ\n\n` +
-                   `Команда: InFlow\n` +
-                   `Фестиваль/Площадка: ${festName}\n\n` +
-                   `О группе:\n${currentBio}\n\n` +
-                   `Состав:\n${currentLineup}\n\n` +
-                   `Аудио / Релизы:\n` +
-                   (socialLinks.youtube ? `- Официальный YouTube-канал: ${socialLinks.youtube}\n` : '') +
-                   (releases ? `- Послушать синглы/треки: ${releases}\n` : '') +
-                   `\nСсылки на соцсети:\n` +
-                   (socialLinks.instagram ? `Instagram: ${socialLinks.instagram}\n` : '') +
-                   (socialLinks.facebook ? `Facebook: ${socialLinks.facebook}\n` : '') +
-                   (socialLinks.tiktok ? `TikTok: ${socialLinks.tiktok}\n` : '') +
-                   (socialLinks.web ? `Сайт/Linktree: ${socialLinks.web}\n` : '') +
-                   (rider ? `\nТехнические требования / Райдер:\n${rider}\n` : '') +
-                   (contacts ? `\nКонтакты для связи:\n${contacts}\n` : '') +
-                   `\nБудем рады стать частью лайнапа фестиваля ${festName}!`;
-                   
-        } else if (lang === 'en') {
-            text = `APPLICATION FOR PARTICIPATION\n\n` +
-                   `Band: InFlow\n` +
-                   `Festival/Venue: ${festName}\n\n` +
-                   `About the band:\n${currentBio}\n\n` +
-                   `Line-up:\n${currentLineup}\n\n` +
-                   `Audio / Releases:\n` +
-                   (socialLinks.youtube ? `- Official YouTube Channel: ${socialLinks.youtube}\n` : '') +
-                   (releases ? `- Listen to our singles/tracks: ${releases}\n` : '') +
-                   `\nSocial Media Links:\n` +
-                   (socialLinks.instagram ? `Instagram: ${socialLinks.instagram}\n` : '') +
-                   (socialLinks.facebook ? `Facebook: ${socialLinks.facebook}\n` : '') +
-                   (socialLinks.tiktok ? `TikTok: ${socialLinks.tiktok}\n` : '') +
-                   (socialLinks.web ? `Website/Linktree: ${socialLinks.web}\n` : '') +
-                   (rider ? `\nTechnical Requirements / Rider:\n${rider}\n` : '') +
-                   (contacts ? `\nDirect Contacts:\n${contacts}\n` : '') +
-                   `\nWe would be thrilled to perform at ${festName}!`;
-
-        } else if (lang === 'ro') {
-            text = `CERERE DE PARTICIPARE LA EVENIMENT\n\n` +
-                   `Trupa: InFlow\n` +
-                   `Festivalul/Locația: ${festName}\n\n` +
-                   `Despre trupă:\n${currentBio}\n\n` +
-                   `Componența:\n${currentLineup}\n\n` +
-                   `Audio / Lansări:\n` +
-                   (socialLinks.youtube ? `- Canalul oficial YouTube: ${socialLinks.youtube}\n` : '') +
-                   (releases ? `- Ascultă single-urile/piesele noastre: ${releases}\n` : '') +
-                   `\nLink-uri rețele sociale:\n` +
-                   (socialLinks.instagram ? `Instagram: ${socialLinks.instagram}\n` : '') +
-                   (socialLinks.facebook ? `Facebook: ${socialLinks.facebook}\n` : '') +
-                   (socialLinks.tiktok ? `TikTok: ${socialLinks.tiktok}\n` : '') +
-                   (socialLinks.web ? `Site web/Linktree: ${socialLinks.web}\n` : '') +
-                   (rider ? `\nCerințe tehnice / Rider:\n${rider}\n` : '') +
-                   (contacts ? `\nContacte directe:\n${contacts}\n` : '') +
-                   `\nNe-am bucura să fim parte a festivalului ${festName}!`;
-        }
-        
-        document.getElementById('festOutput').value = text;
-    }
-
-    /* Логика календаря */
-    function addEvent() {
-        const dateVal = document.getElementById('calDate').value;
-        const titleVal = document.getElementById('calTitle').value.trim();
-        const locVal = document.getElementById('calLocation').value.trim();
-        const descVal = document.getElementById('calDesc').value.trim();
-
-        if(!dateVal || !titleVal) return alert('Заполните хотя бы дату и название события!');
-
-        const newEv = { id: Date.now(), date: dateVal, title: titleVal, loc: locVal, desc: descVal };
-        events.push(newEv);
-        saveEvents();
-        renderEvents();
-
-        document.getElementById('calDate').value = '';
-        document.getElementById('calTitle').value = '';
-        document.getElementById('calLocation').value = '';
-        document.getElementById('calDesc').value = '';
-    }
-
-    function deleteEvent(id) {
-        events = events.filter(ev => ev.id !== id);
-        saveEvents();
-        renderEvents();
-    }
-
-    function renderEvents() {
-        const tbody = document.getElementById('calEventsList');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-
-        events.sort((a, b) => a.date.localeCompare(b.date));
-
-        events.forEach(ev => {
-            // Форматируем дату для файла (.ics генерирует дату в формате YYYYMMDD)
-            const dClean = ev.date.replace(/-/g, '');
-            
-            // Форматируем для календаря Google (если в описании кавычки, чтобы не ломалось)
-            const gTitle = encodeURIComponent(ev.title);
-            const gDesc = encodeURIComponent(`${ev.loc} — ${ev.desc}`);
-            
-            // Ссылка для Google Calendar
-            const gCalLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gTitle}&dates=${dClean}/${dClean}&details=${gDesc}`;
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${ev.date}</td>
-                <td><strong>${ev.title}</strong></td>
-                <td>${ev.loc}</td>
-                <td>${ev.desc}</td>
-                <td>
-                    <a href="${gCalLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
-                    <button class="btn-action" style="padding: 6px 10px; font-size:0.8rem; margin-top:4px;" onclick="deleteEvent(${ev.id})">Удалить</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    /* Логика задач */
-    function addTask() {
-        const tVal = document.getElementById('taskInput').value.trim();
-        if(!tVal) return;
-        tasks.push(tVal);
-        saveTasks();
-        renderTasks();
-        document.getElementById('taskInput').value = '';
-    }
-
-    function removeTask(index) {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTasks();
+    function generateGoogleCalendarLink(ev) {
+        if(!ev.date || !ev.name) return '#';
+        const cleanDate = ev.date.replace(/-/g, '');
+        const datesParam = `${cleanDate}/${cleanDate}`; 
+        const title = encodeURIComponent(ev.name);
+        const location = encodeURIComponent(ev.location || '');
+        const details = encodeURIComponent(ev.comment || '');
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
     }
 
     function renderTasks() {
-        const tList = document.getElementById('taskList');
-        if(!tList) return;
-        tList.innerHTML = '';
-        tasks.forEach((t, i) => {
-            const li = document.createElement('li');
-            li.style.marginBottom = "10px";
-            li.innerHTML = `${t} <button class="btn-action" style="padding: 3px 8px; font-size: 0.8rem; margin-left: 10px;" onclick="removeTask(${i})">✓ Выполнено</button>`;
-            tList.appendChild(li);
+        const tbody = document.getElementById('tasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (tasks.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
+            return;
+        }
+        tasks.forEach((task, index) => {
+            let displayPriority = task.priority === "Высокий" ? "🔴 Высокий" : (task.priority === "Средний" ? "🟡 Средний" : "🟢 Низкий");
+            tbody.innerHTML += `<tr>
+                <td><span class="event-tag">${escapeHTML(task.category)}</span></td>
+                <td><b>${escapeHTML(task.name)}</b></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td>${displayPriority}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateTaskComment(${index}, this.value)"></td>
+                <td style="white-space:nowrap;">
+                    <button class="complete-btn" onclick="archiveTask(${index})">✓</button>
+                    <button class="delete-btn" onclick="deleteTask(${index})">×</button>
+                </td>
+            </tr>`;
         });
     }
 
-    document.addEventListener('DOMContentLoaded', loadData);
+    function renderArchivedTasks() {
+        const tbody = document.getElementById('archivedTasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (archivedTasks.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Архив пуст.</td></tr>`;
+            return;
+        }
+        archivedTasks.forEach((task, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(task.category)}</span></td>
+                <td><del>${escapeHTML(task.name)}</del></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateArchiveComment(${index}, this.value)"></td>
+                <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
+            </tr>`;
+        });
+    }
+
+    function updateTaskComment(index, val) { if(tasks[index]) { tasks[index].comment = val; saveData(); } }
+    function updateArchiveComment(index, val) { if(archivedTasks[index]) { archivedTasks[index].comment = val; saveData(); } }
+    function updateEventComment(index, val) { if(events[index]) { events[index].comment = val; saveData(); } }
+
+    function addTask() {
+        const name = document.getElementById('taskName').value.trim();
+        if (!name) return alert("Введите название задачи");
+        const category = document.getElementById('taskCategory').value;
+        const ownerInput = document.getElementById('taskOwner').value.trim();
+        const deadline = document.getElementById('taskDeadline').value;
+        const priority = document.getElementById('taskPriority').value;
+        const comment = document.getElementById('taskComment').value.trim();
+
+        const userMapping = resolveTelegramTag(ownerInput);
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, priority, comment });
+        
+        saveData(); renderTasks();
+
+        let message = `📌 НОВАЯ ЗАДАЧА [${category}]\n\nЧто: ${name}\nКто: ${userMapping.tg}\nДедлайн: ${deadline || '—'}`;
+        sendTelegram(message, true);
+
+        document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
+    }
+
+    function archiveTask(index) {
+        if(!tasks[index]) return;
+        archivedTasks.push(tasks[index]);
+        sendTelegram(`✅ Выполнено: "${tasks[index].name}"`, false);
+        tasks.splice(index, 1);
+        saveData(); renderTasks(); renderArchivedTasks();
+    }
+
+    function deleteTask(index) { tasks.splice(index, 1); saveData(); renderTasks(); }
+    function deleteArchivedTask(index) { archivedTasks.splice(index, 1); saveData(); renderArchivedTasks(); }
+
+    function renderEvents() {
+        const tbody = document.getElementById('calendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        events.forEach((ev, index) => {
+            const calLink = generateGoogleCalendarLink(ev);
+            tbody.innerHTML += `<tr>
+                <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
+                <td><b>${escapeHTML(ev.name)}</b></td>
+                <td>${escapeHTML(ev.location)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
+                <td style="white-space:nowrap;">
+                    <a href="${calLink}" target="_blank" class="cal-link-btn">🗓️ В телефон</a>
+                    <button class="delete-btn" onclick="deleteEvent(${index})" style="padding: 6px 12px;">×</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function addEvent() {
+        const name = document.getElementById('eventName').value.trim();
+        const date = document.getElementById('eventDate').value;
+        const location = document.getElementById('eventLocation').value.trim();
+        const comment = document.getElementById('eventComment').value.trim();
+        if (!name || !date) return alert("Введите дату и название");
+        
+        const ev = { date, name, location, comment };
+        events.push(ev);
+        saveData(); renderEvents();
+
+        const inlineCalLink = generateGoogleCalendarLink(ev);
+        let message = `📅 НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ!\n\nЧто: ${name}\nКогда: ${date}\nГде: ${location || '—'}\nДетали: ${comment || '—'}\n\n📥 Ссылка для добавления себе в календарь:\n${inlineCalLink}`;
+        sendTelegram(message, false);
+
+        document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
+    }
+
+    function deleteEvent(index) { events.splice(index, 1); saveData(); renderEvents(); }
+
+    function renderFinance() {
+        const tbody = document.getElementById('financeTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        let inc = 0, exp = 0;
+        financeTransactions.forEach((item, index) => {
+            const isInc = item.type === "Доход";
+            const amt = Number(item.amount) || 0;
+            if(isInc) inc += amt; else exp += amt;
+            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
+                <td>${escapeHTML(item.date)}</td>
+                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
+                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
+                <td>${escapeHTML(item.desc)}</td>
+                <td>${amt} MDL</td>
+                <td>${escapeHTML(item.user)}</td>
+                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+            </tr>`;
+        });
+        document.getElementById('totalIncome').innerText = inc + " MDL";
+        document.getElementById('totalExpense').innerText = exp + " MDL";
+        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
+    }
+
+    function addFinanceTransaction() {
+        // ... (функция была переименована в addFinanceTransaction в оригинале)
+    }
+
+    function addFinanceTransaction() {
+        const desc = document.getElementById('finDesc').value.trim();
+        const amount = document.getElementById('finAmount').value;
+        if (!desc || !amount) return alert("Заполните поля");
+        
+        const date = document.getElementById('finDate').value;
+        const type = document.getElementById('finType').value;
+        const category = document.getElementById('finCategory').value;
+        const user = document.getElementById('finUser').value.trim() || 'Общий';
+
+        financeTransactions.push({ date, type, category, desc, amount, user });
+        saveData(); renderFinance();
+
+        document.getElementById('finDesc').value = ''; 
+        document.getElementById('finAmount').value = '';
+    }
+
+    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
+
+    function loadSettingsInputs() {
+        document.getElementById('cfgTgToken').value = TG_TOKEN;
+        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
+        document.getElementById('cfgBinId').value = CLOUD_BIN_ID;
+        document.getElementById('cfgApiKey').value = CLOUD_API_KEY;
+    }
+
+    function saveSettings() {
+        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
+        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
+        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
+        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
+
+        CLOUD_BIN_ID = document.getElementById('cfgBinId').value.trim();
+        CLOUD_API_KEY = document.getElementById('cfgApiKey').value.trim();
+        SafeStorage.setItem('inflow_bin_id', CLOUD_BIN_ID);
+        SafeStorage.setItem('inflow_api_key', CLOUD_API_KEY);
+
+        alert("Настройки сохранены!");
+    }
+
+    // Отправка базы в облако JSONBin
+    function uploadToCloud() {
+        const binId = document.getElementById('cfgBinId').value.trim();
+        const apiKey = document.getElementById('cfgApiKey').value.trim();
+        if (!binId || !apiKey) return alert("Заполните Bin ID и Master Key в настройках!");
+
+        const payload = { tasks, archivedTasks, financeTransactions, events };
+
+        fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': apiKey
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.record) alert("База успешно отправлена в облако!");
+            else alert("Ошибка сохранения: " + JSON.stringify(data));
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Ошибка сети при сохранении.");
+        });
+    }
+
+    // Загрузка базы из облака JSONBin
+    function downloadFromCloud() {
+        const binId = document.getElementById('cfgBinId').value.trim();
+        const apiKey = document.getElementById('cfgApiKey').value.trim();
+        if (!binId || !apiKey) return alert("Заполните Bin ID и Master Key в настройках!");
+
+        fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            method: 'GET',
+            headers: {
+                'X-Master-Key': apiKey
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.record) {
+                tasks = data.record.tasks || [];
+                archivedTasks = data.record.archivedTasks || [];
+                financeTransactions = data.record.financeTransactions || [];
+                events = data.record.events || [];
+                saveData(); 
+                renderAllTables();
+                alert("База данных успешно загружена из облака!");
+            } else {
+                alert("Не удалось загрузить данные: " + JSON.stringify(data));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Ошибка сети при загрузке.");
+        });
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json';
+        a.click();
+    }
+
+    function importData(inputElement) {
+        const file = inputElement.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                tasks = imported.tasks || [];
+                archivedTasks = imported.archivedTasks || [];
+                financeTransactions = imported.financeTransactions || [];
+                events = imported.events || [];
+                saveData(); renderAllTables();
+                alert("База данных успешно восстановлена!");
+            } catch(err) { alert("Ошибка чтения файла. Убедитесь, что выбрали правильный .json бэкап."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetAllData() {
+        if(confirm("Удалить все данные программы? Внимание: финансы и задачи сотрутся.")) {
+            SafeStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = [];
+            renderAllTables();
+        }
+    }
+
+    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderFinance(); }
+
+    function initApp() {
+        loadLocalStorage();
+        loadSettingsInputs();
+        renderAllTables();
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
 </script>
 </body>
 </html>
