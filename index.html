@@ -85,15 +85,6 @@
         .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
         .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
 
-        .blur-sensitive {
-            filter: blur(5px);
-            transition: filter 0.2s ease;
-            cursor: pointer;
-        }
-        .blur-sensitive:hover, .blur-sensitive:focus-within {
-            filter: blur(0px);
-        }
-
         @media (max-width: 768px) {
             body { padding: 8px; }
             h1 { font-size: 1.5rem; }
@@ -255,7 +246,7 @@
                 <tbody id="financeTableBody"></tbody>
             </table>
         </div>
-        <div class="finance-summary blur-sensitive" title="Наведите для просмотра бюджетов">
+        <div class="finance-summary">
             <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
             <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
             <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
@@ -264,14 +255,14 @@
 
     <div id="settings" class="tab-content">
         <h2>Настройки</h2>
-        <div class="settings-card blur-sensitive" title="Наведите или нажмите для изменения настроек">
+        <div class="settings-card">
             <h3>🔔 Уведомления Telegram Bot</h3>
             <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
             <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
             <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
         </div>
         
-        <div class="settings-card blur-sensitive" title="Наведите или нажмите для изменения настроек">
+        <div class="settings-card">
             <h3>☁️ Облачная синхронизация</h3>
             <p style="font-size: 0.9rem; color: #aaa;">Синхронизируйте базу между iPhone и Mac через облако.</p>
             <label>Bin ID: <input type="text" id="cfgBinId" placeholder="Вставьте ваш Bin ID"></label>
@@ -317,9 +308,15 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Экранирование спецсимволов для корректной отправки в Telegram MarkdownV2
+    function escapeMarkdownV2(str) {
+        if (!str) return '';
+        return String(str).replace(/([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])/g, '\\$1');
+    }
+
     function sendTelegram(text, shouldPin = false) {
         if(!TG_TOKEN || !TG_CHAT_ID) return;
-        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=MarkdownV2`;
         fetch(url).then(res => res.json()).then(data => {
             if (shouldPin && data.ok && data.result?.message_id) {
                 fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
@@ -433,7 +430,7 @@
         
         saveData(); renderTasks();
 
-        let message = `📌 НОВАЯ ЗАДАЧА [${category}]\n\nЧто: ${name}\nКто: ${userMapping.tg}\nДедлайн: ${deadline || '—'}`;
+        let message = `📌 *НОВАЯ ЗАДАЧА \\[${escapeMarkdownV2(category)}\\]*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Кто:* ${escapeMarkdownV2(userMapping.tg)}\n*Дедлайн:* ${escapeMarkdownV2(deadline || '—')}`;
         sendTelegram(message, true);
 
         document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
@@ -442,7 +439,7 @@
     function archiveTask(index) {
         if(!tasks[index]) return;
         archivedTasks.push(tasks[index]);
-        sendTelegram(`✅ Выполнено: "${tasks[index].name}"`, false);
+        sendTelegram(`✅ *Выполнено:* "${escapeMarkdownV2(tasks[index].name)}"`, false);
         tasks.splice(index, 1);
         saveData(); renderTasks(); renderArchivedTasks();
     }
@@ -506,7 +503,7 @@
         saveData(); renderEvents();
 
         const inlineCalLink = generateGoogleCalendarLink(ev);
-        let message = `📅 НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ!\n\nЧто: ${name}\nКогда: ${date}\nГде: ${location || '—'}\nДетали: ${comment || '—'}\n\n📥 Ссылка для добавления себе в календарь:\n${inlineCalLink}`;
+        let message = `📅 *НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ\\!*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Когда:* ${escapeMarkdownV2(date)}\n*Где:* ${escapeMarkdownV2(location || '—')}\n*Детали:* ${escapeMarkdownV2(comment || '—')}\n\n📥 [Добавить в Google Календарь](${inlineCalLink})`;
         sendTelegram(message, false);
 
         document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
@@ -515,7 +512,7 @@
     function archiveEvent(index) {
         if(!events[index]) return;
         archivedEvents.push(events[index]);
-        sendTelegram(`✅ Мероприятие завершено: "${events[index].name}" (${events[index].date})`, false);
+        sendTelegram(`✅ *Мероприятие завершено:* "${escapeMarkdownV2(events[index].name)}" (${escapeMarkdownV2(events[index].date)})`, false);
         events.splice(index, 1);
         saveData(); renderEvents(); renderArchivedEvents();
     }
