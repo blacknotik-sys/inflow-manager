@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InFlow Secure Manager</title>
+    <title>InFlow Band Manager</title>
     <style>
         *, *:before, *:after { box-sizing: border-box; }
         :root {
@@ -25,33 +25,10 @@
             -webkit-font-smoothing: antialiased;
         }
         
-        /* === ЭКРАН АВТОРИЗАЦИИ === */
-        #auth-screen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 85vh; max-width: 400px; margin: 0 auto; text-align: center;
-        }
-        #auth-screen h2 { font-size: 1.8rem; margin-bottom: 5px; }
-        #auth-screen p { color: #888; margin-bottom: 25px; }
-        #auth-screen input {
-            width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 8px; 
-            border: 1px solid var(--border-color); background: #2a2a2a; color: #fff; 
-            font-size: 1.2rem; text-align: center; outline: none; transition: border 0.3s;
-        }
-        #auth-screen input:focus { border-color: var(--accent-color); }
-        #auth-screen button {
-            width: 100%; padding: 16px; background: var(--accent-color); color: #fff; 
-            border: none; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer;
-        }
-        #authError { color: var(--danger-color); margin-top: 15px; font-weight: bold; display: none; }
-
-        /* === ОСНОВНОЕ ПРИЛОЖЕНИЕ === */
-        #app-wrapper { display: none; }
-        
         .container { max-width: 1250px; margin: 0 auto; width: 100%; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
         h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; color: #fff; }
         h1 span { color: var(--accent-color); }
-        .logout-btn { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn {
@@ -109,18 +86,9 @@
 </head>
 <body>
 
-<div id="auth-screen">
-    <h2>🔒 Секретная База</h2>
-    <p>Введите код доступа</p>
-    <input type="password" id="passInput" placeholder="Пароль">
-    <button onclick="checkPassword()">Войти</button>
-    <p id="authError">❌ Неверный пароль!</p>
-</div>
-
-<div id="app-wrapper" class="container">
+<div class="container">
     <header>
         <h1>INFLOW <span>| Band Manager</span></h1>
-        <button class="logout-btn" onclick="logoutApp()">Выход</button>
     </header>
 
     <div class="tabs">
@@ -295,4 +263,180 @@
             <p style="font-size: 0.9rem; color: #aaa;">Ручное сохранение файла базы на устройство.</p>
             <button class="tab-btn" style="margin-bottom: 10px;" onclick="exportData()">📥 Скачать бэкап (.json)</button>
             <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
-            <button class="tab-btn" style="background
+            <button class="tab-btn" style="background: #444;" onclick="document.getElementById('importFile').click()">📤 Загрузить бэкап</button>
+            <button class="delete-btn" style="padding: 12px 24px; margin-top:15px; width:100%;" onclick="resetAllData()">⚠️ Сбросить базу данных</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === БЕЗОПАСНОЕ ХРАНИЛИЩЕ ===
+    const SafeStorage = {
+        getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+        clear() { try { localStorage.clear(); } catch (e) {} }
+    };
+
+    // Настройки по умолчанию
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+    let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    const DEFAULT_GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyp-OGr-vivHwOetIpCx3SvK6cRPRmvvE1KxlUht78uQpbJ0iio1ob5WSLpnKS2n_mA/exec";
+    let GOOGLE_SCRIPT_URL = SafeStorage.getItem('inflow_google_url') || DEFAULT_GOOGLE_URL;
+
+    // База данных
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [], archivedEvents = [];
+
+    // === УТИЛИТЫ ===
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeMarkdownV2(str) {
+        if (!str) return '';
+        return String(str).replace(/([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])/g, '\\$1');
+    }
+
+    function sendTelegram(text, shouldPin = false) {
+        if(!TG_TOKEN || !TG_CHAT_ID) return;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=MarkdownV2`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (shouldPin && data.ok && data.result?.message_id) {
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
+            }
+        }).catch(err => console.error(err));
+    }
+
+    // === РАБОТА С ДАННЫМИ ===
+    function loadLocalStorage() {
+        try {
+            tasks = JSON.parse(SafeStorage.getItem('inflow_tasks')) || [];
+            archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
+            events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
+            archivedEvents = JSON.parse(SafeStorage.getItem('inflow_archived_events')) || [];
+            financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
+        } catch (e) {}
+    }
+
+    function saveData() {
+        SafeStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        SafeStorage.setItem('inflow_events', JSON.stringify(events));
+        SafeStorage.setItem('inflow_archived_events', JSON.stringify(archivedEvents));
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
+    }
+
+    function resolveTelegramTag(ownerName) {
+        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
+        const lowerName = String(ownerName).trim().toLowerCase();
+        if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
+        if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
+        if (lowerName === 'серж' || lowerName === 'сергей') return { display: 'Серж', tg: '@Serjblacknote' };
+        return { display: ownerName, tg: ownerName };
+    }
+
+    function generateGoogleCalendarLink(ev) {
+        if(!ev.date || !ev.name) return '#';
+        const cleanDate = ev.date.replace(/-/g, '');
+        const datesParam = `${cleanDate}/${cleanDate}`; 
+        const title = encodeURIComponent(ev.name);
+        const location = encodeURIComponent(ev.location || '');
+        const details = encodeURIComponent(ev.comment || '');
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
+    }
+
+    // === ТАБЛИЦЫ ===
+    function renderTasks() {
+        const tbody = document.getElementById('tasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (tasks.length === 0) return tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
+        
+        tasks.forEach((task, index) => {
+            let displayPriority = task.priority === "Высокий" ? "🔴 Высокий" : (task.priority === "Средний" ? "🟡 Средний" : "🟢 Низкий");
+            tbody.innerHTML += `<tr>
+                <td><span class="event-tag">${escapeHTML(task.category)}</span></td>
+                <td><b>${escapeHTML(task.name)}</b></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td>${displayPriority}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateTaskComment(${index}, this.value)"></td>
+                <td style="white-space:nowrap;">
+                    <button class="complete-btn" onclick="archiveTask(${index})">✓</button>
+                    <button class="delete-btn" onclick="deleteTask(${index})">×</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function renderArchivedTasks() {
+        const tbody = document.getElementById('archivedTasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (archivedTasks.length === 0) return tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Архив пуст.</td></tr>`;
+        
+        archivedTasks.forEach((task, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(task.category)}</span></td>
+                <td><del>${escapeHTML(task.name)}</del></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateArchiveComment(${index}, this.value)"></td>
+                <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
+            </tr>`;
+        });
+    }
+
+    function renderEvents() {
+        const tbody = document.getElementById('calendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (events.length === 0) return tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Предстоящих событий нет.</td></tr>`;
+        
+        events.forEach((ev, index) => {
+            const calLink = generateGoogleCalendarLink(ev);
+            tbody.innerHTML += `<tr>
+                <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
+                <td><b>${escapeHTML(ev.name)}</b></td>
+                <td>${escapeHTML(ev.location)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
+                <td style="white-space:nowrap;">
+                    <a href="${calLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
+                    <button class="complete-btn" onclick="archiveEvent(${index})" style="padding: 6px 12px; margin-left: 4px;">✓</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function renderArchivedEvents() {
+        const tbody = document.getElementById('archivedCalendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        archivedEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (archivedEvents.length === 0) return tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Архив мероприятий пуст.</td></tr>`;
+        
+        archivedEvents.forEach((ev, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(ev.date)}</span></td>
+                <td><del>${escapeHTML(ev.name)}</del></td>
+                <td>${escapeHTML(ev.location)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" placeholder="Внести итоги/расходы..." onchange="updateArchivedEventComment(${index}, this.value)"></td>
+                <td><button class="delete-btn" onclick="deleteArchivedEvent(${index})" style="padding: 6px 12px;">×</button></td>
+            </tr>`;
+        });
+    }
+
+    function renderFinance() {
+        const tbody = document.getElementById('financeTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        let inc = 0, exp = 0;
+        financeTransactions.forEach((item, index) => {
+            const isInc = item.type === "Доход";
+            const amt = Number(item.amount) || 0;
