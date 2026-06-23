@@ -14,6 +14,7 @@
             --border-color: #333;
             --success-color: #28a745;
             --danger-color: #dc3545;
+            --blue-cal: #2a7af3;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -46,11 +47,33 @@
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
         th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
         tr:hover { background: rgba(255,255,255,0.02); }
-        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #ccc; font-size: 0.9rem; border-radius: 4px; min-width: 160px; }
+        
+        /* Изменение 3: Заметки и комментарии в таблицах жирным шрифтом */
+        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #fff; font-size: 0.9rem; border-radius: 4px; min-width: 160px; font-weight: bold; }
         .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
+        
         .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
         .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
-        .cal-link-btn { background: #2a7af3; color: #fff; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-block; }
+        
+        /* Изменение 2: Стильная кнопка вместо громоздкой ссылки календаря */
+        .btn-cal-link {
+            display: inline-block;
+            padding: 8px 14px;
+            background-color: var(--blue-cal);
+            color: #ffffff !important;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            transition: background 0.2s ease, transform 0.1s ease;
+            text-align: center;
+            white-space: nowrap;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cal-link:hover { background-color: #1a65d1; }
+        .btn-cal-link:active { transform: scale(0.97); }
+
         .finance-summary { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: flex-end; }
         .summary-box { background: #222; padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 1.1rem; font-weight: bold; }
         .summary-box.income-box span { color: var(--success-color); }
@@ -63,6 +86,16 @@
         .settings-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px; }
         .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
         .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
+
+        /* Изменение 1: Эффект размытия (Blur) для конфиденциальных полей */
+        .blur-sensitive {
+            filter: blur(5px);
+            transition: filter 0.2s ease;
+            cursor: pointer;
+        }
+        .blur-sensitive:hover, .blur-sensitive:focus-within {
+            filter: blur(0px);
+        }
 
         @media (max-width: 768px) {
             body { padding: 8px; }
@@ -207,7 +240,7 @@
                 <tbody id="financeTableBody"></tbody>
             </table>
         </div>
-        <div class="finance-summary">
+        <div class="finance-summary blur-sensitive" title="Наведите для просмотра бюджетов">
             <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
             <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
             <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
@@ -216,14 +249,14 @@
 
     <div id="settings" class="tab-content">
         <h2>Настройки</h2>
-        <div class="settings-card">
+        <div class="settings-card blur-sensitive" title="Наведите или нажмите для изменения настроек">
             <h3>🔔 Уведомления Telegram Bot</h3>
             <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
             <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
             <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
         </div>
         
-        <div class="settings-card">
+        <div class="settings-card blur-sensitive" title="Наведите или нажмите для изменения настроек">
             <h3>☁️ Облачная синхронизация</h3>
             <p style="font-size: 0.9rem; color: #aaa;">Синхронизируйте базу между iPhone и Mac через облако.</p>
             <label>Bin ID: <input type="text" id="cfgBinId" placeholder="Вставьте ваш Bin ID"></label>
@@ -257,7 +290,6 @@
     let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
     let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
 
-    // Предустановка ваших облачных ключей (подставлены переданные вами значения)
     const DEFAULT_BIN_ID = "6a39adc0f5f4af5e291faa4a";
     const DEFAULT_API_KEY = "$2a$10$Jom.BcYqfZkDu4bXqE9NR.8FtpsrY8By73AU4.Qqe.hsrBh4EVGTi";
     let CLOUD_BIN_ID = SafeStorage.getItem('inflow_bin_id') || DEFAULT_BIN_ID;
@@ -412,8 +444,8 @@
                 <td>${escapeHTML(ev.location)}</td>
                 <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
                 <td style="white-space:nowrap;">
-                    <a href="${calLink}" target="_blank" class="cal-link-btn">🗓️ В телефон</a>
-                    <button class="delete-btn" onclick="deleteEvent(${index})" style="padding: 6px 12px;">×</button>
+                    <a href="${calLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
+                    <button class="delete-btn" onclick="deleteEvent(${index})" style="padding: 6px 12px; margin-left: 4px;">×</button>
                 </td>
             </tr>`;
         });
@@ -463,10 +495,6 @@
     }
 
     function addFinanceTransaction() {
-        // ... (функция была переименована в addFinanceTransaction в оригинале)
-    }
-
-    function addFinanceTransaction() {
         const desc = document.getElementById('finDesc').value.trim();
         const amount = document.getElementById('finAmount').value;
         if (!desc || !amount) return alert("Заполните поля");
@@ -506,7 +534,6 @@
         alert("Настройки сохранены!");
     }
 
-    // Отправка базы в облако JSONBin
     function uploadToCloud() {
         const binId = document.getElementById('cfgBinId').value.trim();
         const apiKey = document.getElementById('cfgApiKey').value.trim();
@@ -533,7 +560,6 @@
         });
     }
 
-    // Загрузка базы из облака JSONBin
     function downloadFromCloud() {
         const binId = document.getElementById('cfgBinId').value.trim();
         const apiKey = document.getElementById('cfgApiKey').value.trim();
