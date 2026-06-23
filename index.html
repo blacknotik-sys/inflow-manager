@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InFlow Band Manager</title>
+    <title>InFlow Secure Manager</title>
     <style>
         *, *:before, *:after { box-sizing: border-box; }
         :root {
@@ -25,10 +25,33 @@
             -webkit-font-smoothing: antialiased;
         }
         
+        /* === ЭКРАН АВТОРИЗАЦИИ === */
+        #auth-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 85vh; max-width: 400px; margin: 0 auto; text-align: center;
+        }
+        #auth-screen h2 { font-size: 1.8rem; margin-bottom: 5px; }
+        #auth-screen p { color: #888; margin-bottom: 25px; }
+        #auth-screen input {
+            width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 8px; 
+            border: 1px solid var(--border-color); background: #2a2a2a; color: #fff; 
+            font-size: 1.2rem; text-align: center; outline: none; transition: border 0.3s;
+        }
+        #auth-screen input:focus { border-color: var(--accent-color); }
+        #auth-screen button {
+            width: 100%; padding: 16px; background: var(--accent-color); color: #fff; 
+            border: none; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer;
+        }
+        #authError { color: var(--danger-color); margin-top: 15px; font-weight: bold; display: none; }
+
+        /* === ОСНОВНОЕ ПРИЛОЖЕНИЕ === */
+        #app-wrapper { display: none; }
+        
         .container { max-width: 1250px; margin: 0 auto; width: 100%; }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
         h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; color: #fff; }
         h1 span { color: var(--accent-color); }
+        .logout-btn { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn {
@@ -86,9 +109,18 @@
 </head>
 <body>
 
-<div class="container">
+<div id="auth-screen">
+    <h2>🔒 Секретная База</h2>
+    <p>Введите код доступа</p>
+    <input type="password" id="passInput" placeholder="Пароль">
+    <button onclick="checkPassword()">Войти</button>
+    <p id="authError">❌ Неверный пароль!</p>
+</div>
+
+<div id="app-wrapper" class="container">
     <header>
         <h1>INFLOW <span>| Band Manager</span></h1>
+        <button class="logout-btn" onclick="logoutApp()">Выход</button>
     </header>
 
     <div class="tabs">
@@ -270,6 +302,38 @@
 </div>
 
 <script>
+    // === ЛОГИКА АВТОРИЗАЦИИ ===
+    const passInput = document.getElementById('passInput');
+    
+    // Поддержка кнопки "Enter" на телефоне и ПК
+    passInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkPassword();
+        }
+    });
+
+    function checkPassword() {
+        const pass = passInput.value.trim();
+        if (pass === "1234321") {
+            sessionStorage.setItem('inflow_auth_secure', 'granted');
+            unlockApp();
+        } else {
+            document.getElementById('authError').style.display = 'block';
+        }
+    }
+
+    function logoutApp() {
+        sessionStorage.removeItem('inflow_auth_secure');
+        location.reload();
+    }
+
+    function unlockApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-wrapper').style.display = 'block';
+        initApp(); // Запускаем базу только после ввода пароля
+    }
+
     // === БЕЗОПАСНОЕ ХРАНИЛИЩЕ ===
     const SafeStorage = {
         getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
@@ -641,8 +705,12 @@
         if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
     }
 
-    // Запуск приложения
-    document.addEventListener('DOMContentLoaded', initApp);
+    // Проверка сессии при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        if (sessionStorage.getItem('inflow_auth_secure') === 'granted') {
+            unlockApp();
+        }
+    });
 </script>
 </body>
 </html>
