@@ -14,7 +14,6 @@
             --border-color: #333;
             --success-color: #28a745;
             --danger-color: #dc3545;
-            --blue-cal: #2a7af3;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -42,36 +41,16 @@
         .form-group input[placeholder="Задача"], .form-group input[placeholder="Заметки"], .form-group input[placeholder="Описание транзакции"], .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] { flex: 2 1 220px; }
         .form-group button.add-btn { flex: 1 1 100%; background: var(--accent-color); color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; padding: 12px; min-height: 44px; }
         input:focus, select:focus { outline: 2px solid var(--accent-color); }
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 25px; }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 850px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
         th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
         tr:hover { background: rgba(255,255,255,0.02); }
-        
-        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #fff; font-size: 0.9rem; border-radius: 4px; min-width: 160px; font-weight: bold; }
+        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #ccc; font-size: 0.9rem; border-radius: 4px; min-width: 160px; }
         .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
-        
         .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
         .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
-        
-        .btn-cal-link {
-            display: inline-block;
-            padding: 8px 14px;
-            background-color: var(--blue-cal);
-            color: #ffffff !important;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            transition: background 0.2s ease, transform 0.1s ease;
-            text-align: center;
-            white-space: nowrap;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-cal-link:hover { background-color: #1a65d1; }
-        .btn-cal-link:active { transform: scale(0.97); }
-
+        .cal-link-btn { background: #2a7af3; color: #fff; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; display: inline-block; }
         .finance-summary { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: flex-end; }
         .summary-box { background: #222; padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 1.1rem; font-weight: bold; }
         .summary-box.income-box span { color: var(--success-color); }
@@ -84,32 +63,6 @@
         .settings-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px; }
         .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
         .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
-
-        /* Система блокировки паролем */
-        .secure-wrap { position: relative; }
-        .blur-sensitive {
-            filter: blur(8px);
-            pointer-events: none;
-            user-select: none;
-            transition: filter 0.3s ease;
-        }
-        .lock-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 10;
-            display: flex; justify-content: center; align-items: center;
-            background: rgba(0,0,0,0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            color: #fff; font-weight: bold; font-size: 1.2rem;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-        }
-        body.unlocked .blur-sensitive {
-            filter: blur(0px);
-            pointer-events: auto;
-            user-select: auto;
-        }
-        body.unlocked .lock-overlay { display: none; }
 
         @media (max-width: 768px) {
             body { padding: 8px; }
@@ -132,14 +85,39 @@
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
+        <button class="tab-btn active" onclick="switchTab('calendar', this)">📅 Календарь</button>
+        <button class="tab-btn" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
         <button class="tab-btn" onclick="switchTab('archive', this)">📁 Архив задач</button>
-        <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Календарь</button>
         <button class="tab-btn" onclick="switchTab('finance', this)">💵 Финансы</button>
         <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
     </div>
 
-    <div id="tasks" class="tab-content active">
+    <div id="calendar" class="tab-content active">
+        <h2>Календарь мероприятий</h2>
+        <div class="form-group">
+            <input type="date" id="eventDate">
+            <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
+            <input type="text" id="eventLocation" placeholder="Место / Клуб">
+            <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
+            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 20%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 28%;">Комментарий / Детали</th>
+                        <th style="width: 22%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tasks" class="tab-content">
         <h2>Менеджер активных задач</h2>
         <div class="form-group">
             <select id="taskCategory">
@@ -199,49 +177,6 @@
         </div>
     </div>
 
-    <div id="calendar" class="tab-content">
-        <h2>Календарь мероприятий</h2>
-        <div class="form-group">
-            <input type="date" id="eventDate">
-            <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
-            <input type="text" id="eventLocation" placeholder="Место / Клуб">
-            <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
-            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
-        </div>
-        
-        <h3>Предстоящие события</h3>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Дата</th>
-                        <th style="width: 22%;">Событие</th>
-                        <th style="width: 18%;">Где</th>
-                        <th style="width: 28%;">Комментарий / Детали</th>
-                        <th style="width: 20%;">Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="calendarTableBody"></tbody>
-            </table>
-        </div>
-
-        <h3>✅ Завершенные мероприятия (Архив)</h3>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 12%;">Дата</th>
-                        <th style="width: 22%;">Событие</th>
-                        <th style="width: 18%;">Где</th>
-                        <th style="width: 38%;">Итоги / Расходы / Заметки для анализа</th>
-                        <th style="width: 10%;">Действия</th>
-                    </tr>
-                </thead>
-                <tbody id="archivedCalendarTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
     <div id="finance" class="tab-content">
         <h2>Управление финансами</h2>
         <div class="form-group">
@@ -272,25 +207,63 @@
                 <tbody id="financeTableBody"></tbody>
             </table>
         </div>
-        
-        <div class="secure-wrap">
-            <div class="finance-summary blur-sensitive">
-                <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
-                <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
-                <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
-            </div>
-            <div class="lock-overlay" onclick="promptPassword()">🔒 Показать баланс</div>
+        <div class="finance-summary">
+            <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
+            <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
+            <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
         </div>
     </div>
 
     <div id="settings" class="tab-content">
         <h2>Настройки</h2>
+        <div class="settings-card">
+            <h3>🔔 Уведомления Telegram Bot</h3>
+            <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
+            <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
+            <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
+        </div>
         
-        <div class="secure-wrap" style="margin-bottom: 20px;">
-            <div class="settings-card blur-sensitive" style="margin-bottom: 0;">
-                <h3>🔔 Уведомления Telegram Bot</h3>
-                <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
-                <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
-                <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
+        <div class="settings-card">
+            <h3>☁️ Облачная синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Синхронизируйте базу между устройствами через облако.</p>
+            <label>Bin ID: <input type="text" id="cfgBinId" placeholder="Вставьте ваш Bin ID"></label>
+            <label>Master Key: <input type="text" id="cfgApiKey" placeholder="Вставьте ваш Master Key"></label>
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                <button class="tab-btn" style="background: #008CBA; border:none; color:#fff;" onclick="uploadToCloud()">⬆️ Залить в облако</button>
+                <button class="tab-btn" style="background: #4CAF50; border:none; color:#fff;" onclick="downloadFromCloud()">⬇️ Забрать из облака</button>
             </div>
-            <div class="lock-overlay" onclick="promptPassword()">🔒 По
+        </div>
+
+        <div class="settings-card">
+            <h3>🔄 Импорт / Экспорт Базы</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Если вы заходите с другого телефона, просто загрузите сюда последний скачанный JSON файл.</p>
+            <button class="tab-btn" style="margin-bottom: 10px;" onclick="exportData()">📥 Сохранить бэкап (.json)</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+            <button class="tab-btn" style="background: #444;" onclick="document.getElementById('importFile').click()">📤 Загрузить бэкап из файла</button>
+            <button class="delete-btn" style="padding: 12px 24px; margin-top:15px; width:100%;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SafeStorage = {
+        getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+        clear() { try { localStorage.clear(); } catch (e) {} }
+    };
+
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+    let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    const DEFAULT_BIN_ID = "6a39adc0f5f4af5e291faa4a";
+    const DEFAULT_API_KEY = "$2a$10$Jom.BcYqfZkDu4bXqE9NR.8FtpsrY8By73AU4.Qqe.hsrBh4EVGTi";
+    let CLOUD_BIN_ID = SafeStorage.getItem('inflow_bin_id') || DEFAULT_BIN_ID;
+    let CLOUD_API_KEY = SafeStorage.getItem('inflow_api_key') || DEFAULT_API_KEY;
+
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [];
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace
