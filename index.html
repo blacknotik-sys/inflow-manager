@@ -440,3 +440,209 @@
         financeTransactions.forEach((item, index) => {
             const isInc = item.type === "Доход";
             const amt = Number(item.amount) || 0;
+            if(isInc) inc += amt; else exp += amt;
+            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
+                <td>${escapeHTML(item.date)}</td>
+                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
+                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
+                <td>${escapeHTML(item.desc)}</td>
+                <td>${amt} MDL</td>
+                <td>${escapeHTML(item.user)}</td>
+                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+            </tr>`;
+        });
+        document.getElementById('totalIncome').innerText = inc + " MDL";
+        document.getElementById('totalExpense').innerText = exp + " MDL";
+        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
+    }
+
+    // === ОБРАБОТЧИКИ СОБЫТИЙ И ИЗМЕНЕНИЙ ===
+    function updateTaskComment(index, val) { if(tasks[index]) { tasks[index].comment = val; saveData(); } }
+    function updateArchiveComment(index, val) { if(archivedTasks[index]) { archivedTasks[index].comment = val; saveData(); } }
+    function updateEventComment(index, val) { if(events[index]) { events[index].comment = val; saveData(); } }
+    function updateArchivedEventComment(index, val) { if(archivedEvents[index]) { archivedEvents[index].comment = val; saveData(); } }
+
+    function addTask() {
+        const name = document.getElementById('taskName').value.trim();
+        if (!name) return alert("Введите название задачи");
+        const category = document.getElementById('taskCategory').value;
+        const ownerInput = document.getElementById('taskOwner').value.trim();
+        const deadline = document.getElementById('taskDeadline').value;
+        const priority = document.getElementById('taskPriority').value;
+        const comment = document.getElementById('taskComment').value.trim();
+
+        const userMapping = resolveTelegramTag(ownerInput);
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, priority, comment });
+        saveData(); renderTasks();
+
+        sendTelegram(`📌 *НОВАЯ ЗАДАЧА \\[${escapeMarkdownV2(category)}\\]*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Кто:* ${escapeMarkdownV2(userMapping.tg)}\n*Дедлайн:* ${escapeMarkdownV2(deadline || '—')}`, true);
+        document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
+    }
+
+    function archiveTask(index) {
+        if(!tasks[index]) return;
+        archivedTasks.push(tasks[index]);
+        sendTelegram(`✅ *Выполнено:* "${escapeMarkdownV2(tasks[index].name)}"`, false);
+        tasks.splice(index, 1);
+        saveData(); renderTasks(); renderArchivedTasks();
+    }
+
+    function deleteTask(index) { tasks.splice(index, 1); saveData(); renderTasks(); }
+    function deleteArchivedTask(index) { archivedTasks.splice(index, 1); saveData(); renderArchivedTasks(); }
+
+    function addEvent() {
+        const name = document.getElementById('eventName').value.trim();
+        const date = document.getElementById('eventDate').value;
+        const location = document.getElementById('eventLocation').value.trim();
+        const comment = document.getElementById('eventComment').value.trim();
+        if (!name || !date) return alert("Введите дату и название");
+        
+        events.push({ date, name, location, comment });
+        saveData(); renderEvents();
+
+        const inlineCalLink = generateGoogleCalendarLink({ date, name, location, comment });
+        sendTelegram(`📅 *НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ\\!*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Когда:* ${escapeMarkdownV2(date)}\n*Где:* ${escapeMarkdownV2(location || '—')}\n*Детали:* ${escapeMarkdownV2(comment || '—')}\n\n📥 [Добавить в Google Календарь](${inlineCalLink})`, false);
+        document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
+    }
+
+    function archiveEvent(index) {
+        if(!events[index]) return;
+        archivedEvents.push(events[index]);
+        sendTelegram(`✅ *Мероприятие завершено:* "${escapeMarkdownV2(events[index].name)}" (${escapeMarkdownV2(events[index].date)})`, false);
+        events.splice(index, 1);
+        saveData(); renderEvents(); renderArchivedEvents();
+    }
+
+    function deleteArchivedEvent(index) {
+        if(confirm("Удалить мероприятие из архива окончательно?")) {
+            archivedEvents.splice(index, 1); saveData(); renderArchivedEvents();
+        }
+    }
+
+    function addFinanceTransaction() {
+        const desc = document.getElementById('finDesc').value.trim();
+        const amount = document.getElementById('finAmount').value;
+        if (!desc || !amount) return alert("Заполните поля");
+        
+        financeTransactions.push({ 
+            date: document.getElementById('finDate').value, 
+            type: document.getElementById('finType').value, 
+            category: document.getElementById('finCategory').value, 
+            desc, amount, 
+            user: document.getElementById('finUser').value.trim() || 'Общий' 
+        });
+        saveData(); renderFinance();
+        document.getElementById('finDesc').value = ''; document.getElementById('finAmount').value = '';
+    }
+
+    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
+
+    // === СИНХРОНИЗАЦИЯ GOOGLE APP SCRIPT ===
+    function loadSettingsInputs() {
+        document.getElementById('cfgTgToken').value = TG_TOKEN;
+        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
+        document.getElementById('cfgGoogleUrl').value = GOOGLE_SCRIPT_URL;
+    }
+
+    function saveSettings() {
+        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
+        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
+        GOOGLE_SCRIPT_URL = document.getElementById('cfgGoogleUrl').value.trim();
+        
+        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
+        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
+        SafeStorage.setItem('inflow_google_url', GOOGLE_SCRIPT_URL);
+        alert("Настройки сохранены!");
+    }
+
+    function uploadToGoogleDrive() {
+        const url = document.getElementById('cfgGoogleUrl').value.trim();
+        if (!url) return alert("Сначала вставьте URL Google Скрипта в настройках!");
+
+        const payload = { tasks, archivedTasks, financeTransactions, events, archivedEvents };
+        alert("Отправка данных в облако... Это может занять несколько секунд.");
+
+        fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(() => alert("✅ Запрос отправлен! Данные сохранены на Google Drive."))
+        .catch(err => { console.error(err); alert("❌ Ошибка сети при выгрузке."); });
+    }
+
+    function downloadFromGoogleDrive() {
+        const url = document.getElementById('cfgGoogleUrl').value.trim();
+        if (!url) return alert("Сначала вставьте URL Google Скрипта в настройках!");
+
+        alert("Загрузка с Google Drive...");
+        fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.status === "not_found") {
+                alert("Файл на Диске еще не создан. Выгрузите базу хотя бы один раз (Кнопка 'Выгрузить в Google').");
+            } else if (data && (data.tasks !== undefined || data.events !== undefined)) {
+                tasks = data.tasks || [];
+                archivedTasks = data.archivedTasks || [];
+                financeTransactions = data.financeTransactions || [];
+                events = data.events || [];
+                archivedEvents = data.archivedEvents || [];
+                saveData(); renderAllTables();
+                alert("⬇️ База успешно скачана и синхронизирована!");
+            } else {
+                alert("⚠️ Ошибка структуры: не удалось разобрать скачанный файл.");
+            }
+        })
+        .catch(err => { console.error(err); alert("❌ Ошибка скачивания с Google Drive."); });
+    }
+
+    // === ЛОКАЛЬНЫЕ БЭКАПЫ ===
+    function exportData() {
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events, archivedEvents }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json'; a.click();
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                tasks = data.tasks || [];
+                archivedTasks = data.archivedTasks || [];
+                financeTransactions = data.financeTransactions || [];
+                events = data.events || [];
+                archivedEvents = data.archivedEvents || [];
+                saveData(); renderAllTables();
+                alert("✅ База данных восстановлена из файла!");
+            } catch(err) { alert("Ошибка чтения файла JSON."); }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetAllData() {
+        if(confirm("Вы уверены, что хотите удалить ВСЕ локальные данные?")) {
+            SafeStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = []; archivedEvents = [];
+            renderAllTables();
+        }
+    }
+
+    // === ИНИЦИАЛИЗАЦИЯ ===
+    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderArchivedEvents(); renderFinance(); }
+
+    function initApp() {
+        loadLocalStorage();
+        loadSettingsInputs();
+        renderAllTables();
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
+    }
+
+    // Запуск приложения
+    document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
