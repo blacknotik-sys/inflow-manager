@@ -3,155 +3,696 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InFlow Band Manager Secure</title>
+    <title>InFlow Band Manager Local</title>
     <style>
-        /* (Стили остаются те же, что были) */
         *, *:before, *:after { box-sizing: border-box; }
-        :root { --bg-color: #121212; --panel-bg: #1e1e1e; --accent-color: #ff3366; --text-color: #e0e0e0; --border-color: #333; --success-color: #28a745; --danger-color: #dc3545; --blue-cal: #2a7af3; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 15px; }
-        .container { max-width: 1250px; margin: 0 auto; }
-        #auth-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); max-width: 450px; margin: 50px auto; text-align: center; }
-        #app-body { display: none; }
-        .tab-content { display: none; background: var(--panel-bg); padding: 15px; border-radius: 8px; }
-        .tab-content.active { display: block; }
-        .tab-btn { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 10px; color: #fff; cursor: pointer; border-radius: 6px; }
-        .tab-btn.active { background: var(--accent-color); }
-        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: #222; padding: 15px; border-radius: 6px; }
-        input, select { padding: 10px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; border-radius: 4px; }
-        .add-btn { background: var(--accent-color); color: #fff; border: none; padding: 10px 20px; cursor: pointer; }
-        .table-wrapper { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --accent-color: #ff3366;
+            --text-color: #e0e0e0;
+            --border-color: #333;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --blue-cal: #2a7af3;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container { max-width: 1250px; margin: 0 auto; width: 100%; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; }
+        h1 { margin: 0; font-size: 2rem; letter-spacing: 1px; color: #fff; }
+        h1 span { color: var(--accent-color); }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn {
+            flex: 1 1 auto; background: var(--panel-bg); color: var(--text-color); border: 1px solid var(--border-color);
+            padding: 12px 15px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: all 0.2s ease;
+            font-size: 0.95rem; min-height: 44px; display: flex; align-items: center; justify-content: center;
+        }
+        .tab-btn.active, .tab-btn:hover { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+        .tab-content { display: none; background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .tab-content.active { display: block !important; }
+        .form-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .form-group input, .form-group select { flex: 1 1 140px; min-width: 110px; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 1rem; min-height: 44px; }
+        .form-group input[placeholder="Задача"], .form-group input[placeholder="Заметки"], .form-group input[placeholder="Описание транзакции"], .form-group input[placeholder="Детали (Сет-лист, чеклист...)"] { flex: 2 1 220px; }
+        .form-group button.add-btn { flex: 1 1 100%; background: var(--accent-color); color: #fff; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 6px; padding: 12px; min-height: 44px; }
+        input:focus, select:focus { outline: 2px solid var(--accent-color); }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 850px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
+        th { background-color: rgba(255, 33, 102, 0.1); color: var(--accent-color); font-weight: 600; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .table-comment-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px dashed #555; padding: 8px; color: #fff; font-size: 0.9rem; border-radius: 4px; min-width: 160px; font-weight: bold; }
+        .table-comment-input:focus { background: #2a2a2a; border: 1px solid var(--accent-color); color: #fff; outline: none; }
+        
+        .complete-btn { background: var(--success-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; margin-right: 5px; font-weight: bold; min-height: 38px; }
+        .delete-btn { background: var(--danger-color); color: #fff; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-weight: bold; min-height: 38px; }
+        
+        .btn-cal-link {
+            display: inline-block;
+            padding: 8px 14px;
+            background-color: var(--blue-cal);
+            color: #ffffff !important;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            transition: background 0.2s ease, transform 0.1s ease;
+            text-align: center;
+            white-space: nowrap;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cal-link:hover { background-color: #1a65d1; }
+        .btn-cal-link:active { transform: scale(0.97); }
+
+        .finance-summary { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: flex-end; }
+        .summary-box { background: #222; padding: 12px 20px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 1.1rem; font-weight: bold; }
+        .summary-box.income-box span { color: var(--success-color); }
+        .summary-box.expense-box span { color: var(--danger-color); }
+        .summary-box.balance-box span { color: #00fff0; }
+        .event-tag { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; background: #444; color: #fff; font-weight: bold; }
+        .archived-tr { opacity: 0.6; }
+        .income-tr { background-color: rgba(40, 167, 69, 0.03); }
+        .expense-tr { background-color: rgba(220, 53, 69, 0.03); }
+        .settings-card { background: rgba(255,255,255,0.02); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .settings-card label { display: block; margin-bottom: 15px; font-weight: bold; }
+        .settings-card input { width: 100%; padding: 12px; background: #2a2a2a; border: 1px solid var(--border-color); color: #fff; margin-top: 8px; border-radius: 6px; }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            h1 { font-size: 1.5rem; }
+            .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+            .tabs button:nth-child(5) { grid-column: span 2; }
+            .form-group { display: flex !important; flex-direction: column !important; gap: 10px; padding: 12px; }
+            .form-group input, .form-group select, .form-group button.add-btn { width: 100% !important; flex: none !important; font-size: 16px !important; }
+            .table-comment-input { font-size: 16px !important; }
+            .finance-summary { flex-direction: column; align-items: stretch; }
+            .summary-box { text-align: center; }
+        }
     </style>
 </head>
 <body>
 
-<div id="auth-screen">
-    <h2>🔒 Вход в базу данных INFLOW</h2>
-    <input type="password" id="passInput" placeholder="Введите пароль" autofocus>
-    <button onclick="checkPassword()" style="padding:10px 20px; background:var(--accent-color); color:white; border:none; border-radius:4px; margin-top:10px;">Войти</button>
-    <div id="authError" style="color:red; margin-top:10px;"></div>
-</div>
+<div class="container">
+    <header>
+        <h1>INFLOW <span>| Band Manager</span></h1>
+    </header>
 
-<div id="app-body" class="container">
-    <header><h1>INFLOW <span>| Manager</span></h1></header>
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('calendar', this)">📅 Календарь</button>
-        <button class="tab-btn" onclick="switchTab('tasks', this)">📋 Задачи</button>
+        <button class="tab-btn" onclick="switchTab('tasks', this)">📋 Активные задачи</button>
+        <button class="tab-btn" onclick="switchTab('archive', this)">📁 Архив задач</button>
         <button class="tab-btn" onclick="switchTab('finance', this)">💵 Финансы</button>
         <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Настройки</button>
     </div>
 
     <div id="calendar" class="tab-content active">
-        <h3>Предстоящие события</h3>
+        <h2>Календарь мероприятий</h2>
         <div class="form-group">
-            <input type="date" id="eventDate"><input type="text" id="eventName" placeholder="Название">
-            <button class="add-btn" onclick="addEvent()">Добавить</button>
+            <input type="date" id="eventDate">
+            <input type="text" id="eventName" placeholder="Название (Gig, Fest...)">
+            <input type="text" id="eventLocation" placeholder="Место / Клуб">
+            <input type="text" id="eventComment" placeholder="Детали (Сет-лист, чеклист...)">
+            <button class="add-btn" onclick="addEvent()">Добавить событие (+)</button>
         </div>
-        <div class="table-wrapper"><table id="calendarTable"><thead><tr><th>Дата</th><th>Событие</th></tr></thead><tbody id="calendarTableBody"></tbody></table></div>
+        
+        <h3>Предстоящие события</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 22%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 28%;">Комментарий / Детали</th>
+                        <th style="width: 20%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="calendarTableBody"></tbody>
+            </table>
+        </div>
+
+        <h3>✅ Завершенные мероприятия (Архив)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Дата</th>
+                        <th style="width: 22%;">Событие</th>
+                        <th style="width: 18%;">Где</th>
+                        <th style="width: 38%;">Итоги / Расходы / Заметки для анализа</th>
+                        <th style="width: 10%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedCalendarTableBody"></tbody>
+            </table>
+        </div>
     </div>
-    
+
     <div id="tasks" class="tab-content">
-        <h3>Задачи</h3>
-        <div class="form-group"><input type="text" id="taskName" placeholder="Задача"><button class="add-btn" onclick="addTask()">Добавить</button></div>
-        <div class="table-wrapper"><table id="tasksTable"><thead><tr><th>Задача</th></tr></thead><tbody id="tasksTableBody"></tbody></table></div>
+        <h2>Менеджер активных задач</h2>
+        <div class="form-group">
+            <select id="taskCategory">
+                <option value="Организация">Организация</option>
+                <option value="Творчество">Творчество</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Концерты">Концерты</option>
+                <option value="Студия">Студия</option>
+                <option value="PR / Продвижение">PR / Продвижение</option>
+            </select>
+            <input type="text" id="taskName" placeholder="Задача">
+            <input type="text" id="taskOwner" placeholder="Кто делает">
+            <input type="date" id="taskDeadline">
+            <select id="taskPriority">
+                <option value="Низкий">Низкий</option>
+                <option value="Средний">Средний</option>
+                <option value="Высокий">Высокий</option>
+            </select>
+            <input type="text" id="taskComment" placeholder="Заметки">
+            <button class="add-btn" onclick="addTask()">Добавить задачу (+)</button>
+        </div>
+        <h3>Текущие дела</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 26%;">Задача</th>
+                        <th style="width: 14%;">Кто</th>
+                        <th style="width: 12%;">Дедлайн</th>
+                        <th style="width: 12%;">Приоритет</th>
+                        <th style="width: 14%;">Комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="archive" class="tab-content">
+        <h2>📁 Архив выполненных задач</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 14%;">Категория</th>
+                        <th style="width: 26%;">Задача</th>
+                        <th style="width: 14%;">Кто сделал</th>
+                        <th style="width: 12%;">Дедлайн</th>
+                        <th style="width: 26%;">Финальный комментарий</th>
+                        <th style="width: 8%;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="archivedTasksTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="finance" class="tab-content">
-        <h3>Финансы</h3>
-        <div class="table-wrapper"><table id="financeTable"><thead><tr><th>Описание</th><th>Сумма</th></tr></thead><tbody id="financeTableBody"></tbody></table></div>
+        <h2>Управление финансами</h2>
+        <div class="form-group">
+            <input type="date" id="finDate">
+            <select id="finType">
+                <option value="Расход">💸 Расход</option>
+                <option value="Доход">💰 Доход</option>
+            </select>
+            <select id="finCategory">
+                <option value="Концерты / Гонорары">Концерты / Гонорары</option>
+                <option value="Репетиции">Репетиции</option>
+                <option value="Студия / Сведение">Студия / Сведение</option>
+                <option value="Маркетинг / PR">Маркетинг / PR</option>
+                <option value="Мерч">Мерч</option>
+                <option value="Оборудование">Оборудование</option>
+                <option value="Другое">Другое</option>
+            </select>
+            <input type="text" id="finDesc" placeholder="Описание">
+            <input type="number" id="finAmount" placeholder="Сумма (MDL)">
+            <input type="text" id="finUser" placeholder="Кто внес">
+            <button class="add-btn" onclick="addFinanceTransaction()">Внести в бюджет (+)</button>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Дата</th><th>Тип</th><th>Категория</th><th>Описание</th><th>Сумма</th><th>Кто</th><th></th></tr>
+                </thead>
+                <tbody id="financeTableBody"></tbody>
+            </table>
+        </div>
+        <div class="finance-summary">
+            <div class="summary-box income-box">Общий доход: <span id="totalIncome">0 MDL</span></div>
+            <div class="summary-box expense-box">Общий расход: <span id="totalExpense">0 MDL</span></div>
+            <div class="summary-box balance-box">Чистый баланс: <span id="netBalance">0 MDL</span></div>
+        </div>
     </div>
 
     <div id="settings" class="tab-content">
-        <h3>Google Drive Sync</h3>
-        <button class="tab-btn" onclick="loadGoogleAPI()">🔑 Подключить Google API</button>
-        <button class="tab-btn" onclick="uploadToGDrive()">⬆️ Сохранить на диск</button>
-        <button class="tab-btn" onclick="downloadFromGDirect()">⬇️ Загрузить с диска</button>
-        <p id="gStatus"></p>
+        <h2>Настройки</h2>
+        <div class="settings-card">
+            <h3>🔔 Уведомления Telegram Bot</h3>
+            <label>Токен Бота: <input type="text" id="cfgTgToken"></label>
+            <label>ID Чата: <input type="text" id="cfgTgChatId"></label>
+            <button class="tab-btn" style="background: var(--accent-color); border:none; color:#fff;" onclick="saveSettings()">Сохранить Telegram</button>
+        </div>
+        
+        <div class="settings-card">
+            <h3>☁️ Облачная синхронизация</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Синхронизируйте базу между iPhone и Mac через облако.</p>
+            <label>Bin ID: <input type="text" id="cfgBinId" placeholder="Вставьте ваш Bin ID"></label>
+            <label>Master Key: <input type="text" id="cfgApiKey" placeholder="Вставьте ваш Master Key"></label>
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
+                <button class="tab-btn" style="background: #008CBA; border:none; color:#fff;" onclick="uploadToCloud()">⬆️ Залить в облако</button>
+                <button class="tab-btn" style="background: #4CAF50; border:none; color:#fff;" onclick="downloadFromCloud()">⬇️ Забрать из облака</button>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h3>🔄 Импорт / Экспорт Базы</h3>
+            <p style="font-size: 0.9rem; color: #aaa;">Если вы заходите с другого телефона, просто загрузите сюда последний скачанный JSON файл.</p>
+            <button class="tab-btn" style="margin-bottom: 10px;" onclick="exportData()">📥 Сохранить бэкап (.json)</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+            <button class="tab-btn" style="background: #444;" onclick="document.getElementById('importFile').click()">📤 Загрузить бэкап из файла</button>
+            <button class="delete-btn" style="padding: 12px 24px; margin-top:15px; width:100%;" onclick="resetAllData()">⚠️ Сбросить всю базу данных</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- ОСНОВНАЯ ЛОГИКА ---
-    let db = { tasks: [], finance: [], events: [] };
+    const SafeStorage = {
+        getItem(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+        setItem(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+        clear() { try { localStorage.clear(); } catch (e) {} }
+    };
 
-    function checkPassword() {
-        const pass = document.getElementById('passInput').value.trim();
-        if (pass === "1234321") {
-            localStorage.setItem('inflow_auth', 'yes');
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app-body').style.display = 'block';
-            initApp();
-        } else {
-            document.getElementById('authError').innerText = "❌ Неверный пароль!";
-        }
+    const DEFAULT_TG_TOKEN = "8745857091:AAHMHa16tHqhmESPN4-LAKI6R5cVW7KOSyM";
+    const DEFAULT_TG_CHAT_ID = "-1002074840667";
+    let TG_TOKEN = SafeStorage.getItem('inflow_tg_token') || DEFAULT_TG_TOKEN;
+    let TG_CHAT_ID = SafeStorage.getItem('inflow_tg_chat_id') || DEFAULT_TG_CHAT_ID;
+
+    const DEFAULT_BIN_ID = "6a39adc0f5f4af5e291faa4a";
+    const DEFAULT_API_KEY = "$2a$10$Jom.BcYqfZkDu4bXqE9NR.8FtpsrY8By73AU4.Qqe.hsrBh4EVGTi";
+    let CLOUD_BIN_ID = SafeStorage.getItem('inflow_bin_id') || DEFAULT_BIN_ID;
+    let CLOUD_API_KEY = SafeStorage.getItem('inflow_api_key') || DEFAULT_API_KEY;
+
+    let tasks = [], archivedTasks = [], financeTransactions = [], events = [], archivedEvents = [];
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    if (localStorage.getItem('inflow_auth') === 'yes') {
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app-body').style.display = 'block';
-        initApp();
+    function escapeMarkdownV2(str) {
+        if (!str) return '';
+        return String(str).replace(/([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])/g, '\\$1');
     }
 
-    function initApp() {
-        // Загрузка данных из localStorage
+    function sendTelegram(text, shouldPin = false) {
+        if(!TG_TOKEN || !TG_CHAT_ID) return;
+        const url = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}&parse_mode=MarkdownV2`;
+        fetch(url).then(res => res.json()).then(data => {
+            if (shouldPin && data.ok && data.result?.message_id) {
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/pinChatMessage?chat_id=${TG_CHAT_ID}&message_id=${data.result.message_id}&disable_notification=true`);
+            }
+        }).catch(err => console.error(err));
+    }
+
+    function loadLocalStorage() {
         try {
-            db = JSON.parse(localStorage.getItem('inflow_db')) || { tasks: [], finance: [], events: [] };
-        } catch(e) { db = { tasks: [], finance: [], events: [] }; }
-        renderTables();
+            tasks = JSON.parse(SafeStorage.getItem('inflow_tasks')) || [];
+            archivedTasks = JSON.parse(SafeStorage.getItem('inflow_archived_tasks')) || [];
+            events = JSON.parse(SafeStorage.getItem('inflow_events')) || [];
+            archivedEvents = JSON.parse(SafeStorage.getItem('inflow_archived_events')) || [];
+            financeTransactions = JSON.parse(SafeStorage.getItem('inflow_finance')) || [];
+        } catch (e) {}
     }
 
-    function saveData() { localStorage.setItem('inflow_db', JSON.stringify(db)); renderTables(); }
-
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).style.display = 'block';
-        btn.classList.add('active');
+    function saveData() {
+        SafeStorage.setItem('inflow_tasks', JSON.stringify(tasks));
+        SafeStorage.setItem('inflow_archived_tasks', JSON.stringify(archivedTasks));
+        SafeStorage.setItem('inflow_finance', JSON.stringify(financeTransactions));
+        SafeStorage.setItem('inflow_events', JSON.stringify(events));
+        SafeStorage.setItem('inflow_archived_events', JSON.stringify(archivedEvents));
     }
 
-    function renderTables() {
-        // Отрисовка таблиц... (минифицировано для краткости, логика та же)
-        const cBody = document.getElementById('calendarTableBody');
-        if(cBody) {
-            cBody.innerHTML = db.events.map(e => `<tr><td>${e.date}</td><td>${e.name}</td></tr>`).join('');
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
+    }
+
+    function resolveTelegramTag(ownerName) {
+        if (!ownerName) return { display: 'Не указан', tg: 'Не указан' };
+        const lowerName = String(ownerName).trim().toLowerCase();
+        if (lowerName === 'таня' || lowerName === 'татьяна') return { display: 'Таня', tg: '@anghel_tatiana' };
+        if (lowerName === 'андрей') return { display: 'Андрей', tg: '@guitaristishe' };
+        if (lowerName === 'серж' || lowerName === 'сергей') return { display: 'Серж', tg: '@Serjblacknote' };
+        return { display: ownerName, tg: ownerName };
+    }
+
+    function generateGoogleCalendarLink(ev) {
+        if(!ev.date || !ev.name) return '#';
+        const cleanDate = ev.date.replace(/-/g, '');
+        const datesParam = `${cleanDate}/${cleanDate}`; 
+        const title = encodeURIComponent(ev.name);
+        const location = encodeURIComponent(ev.location || '');
+        const details = encodeURIComponent(ev.comment || '');
+        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
+    }
+
+    function renderTasks() {
+        const tbody = document.getElementById('tasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (tasks.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">🎉 Задач нет.</td></tr>`;
+            return;
         }
+        tasks.forEach((task, index) => {
+            let displayPriority = task.priority === "Высокий" ? "🔴 Высокий" : (task.priority === "Средний" ? "🟡 Средний" : "🟢 Низкий");
+            tbody.innerHTML += `<tr>
+                <td><span class="event-tag">${escapeHTML(task.category)}</span></td>
+                <td><b>${escapeHTML(task.name)}</b></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td>${displayPriority}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateTaskComment(${index}, this.value)"></td>
+                <td style="white-space:nowrap;">
+                    <button class="complete-btn" onclick="archiveTask(${index})">✓</button>
+                    <button class="delete-btn" onclick="deleteTask(${index})">×</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function renderArchivedTasks() {
+        const tbody = document.getElementById('archivedTasksTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        if (archivedTasks.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">Архив пуст.</td></tr>`;
+            return;
+        }
+        archivedTasks.forEach((task, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(task.category)}</span></td>
+                <td><del>${escapeHTML(task.name)}</del></td>
+                <td>${escapeHTML(task.owner)}</td>
+                <td>${escapeHTML(task.deadline)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(task.comment)}" onchange="updateArchiveComment(${index}, this.value)"></td>
+                <td><button class="delete-btn" onclick="deleteArchivedTask(${index})">×</button></td>
+            </tr>`;
+        });
+    }
+
+    function updateTaskComment(index, val) { if(tasks[index]) { tasks[index].comment = val; saveData(); } }
+    function updateArchiveComment(index, val) { if(archivedTasks[index]) { archivedTasks[index].comment = val; saveData(); } }
+    function updateEventComment(index, val) { if(events[index]) { events[index].comment = val; saveData(); } }
+    function updateArchivedEventComment(index, val) { if(archivedEvents[index]) { archivedEvents[index].comment = val; saveData(); } }
+
+    function addTask() {
+        const name = document.getElementById('taskName').value.trim();
+        if (!name) return alert("Введите название задачи");
+        const category = document.getElementById('taskCategory').value;
+        const ownerInput = document.getElementById('taskOwner').value.trim();
+        const deadline = document.getElementById('taskDeadline').value;
+        const priority = document.getElementById('taskPriority').value;
+        const comment = document.getElementById('taskComment').value.trim();
+
+        const userMapping = resolveTelegramTag(ownerInput);
+        tasks.push({ category, name, owner: userMapping.display, ownerTg: userMapping.tg, deadline, priority, comment });
+        
+        saveData(); renderTasks();
+
+        let message = `📌 *НОВАЯ ЗАДАЧА \\[${escapeMarkdownV2(category)}\\]*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Кто:* ${escapeMarkdownV2(userMapping.tg)}\n*Дедлайн:* ${escapeMarkdownV2(deadline || '—')}`;
+        sendTelegram(message, true);
+
+        document.getElementById('taskName').value = ''; document.getElementById('taskOwner').value = ''; document.getElementById('taskComment').value = '';
+    }
+
+    function archiveTask(index) {
+        if(!tasks[index]) return;
+        archivedTasks.push(tasks[index]);
+        sendTelegram(`✅ *Выполнено:* "${escapeMarkdownV2(tasks[index].name)}"`, false);
+        tasks.splice(index, 1);
+        saveData(); renderTasks(); renderArchivedTasks();
+    }
+
+    function deleteTask(index) { tasks.splice(index, 1); saveData(); renderTasks(); }
+    function deleteArchivedTask(index) { archivedTasks.splice(index, 1); saveData(); renderArchivedTasks(); }
+
+    function renderEvents() {
+        const tbody = document.getElementById('calendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (events.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Предстоящих событий нет.</td></tr>`;
+        } else {
+            events.forEach((ev, index) => {
+                const calLink = generateGoogleCalendarLink(ev);
+                tbody.innerHTML += `<tr>
+                    <td><span class="event-tag">${escapeHTML(ev.date)}</span></td>
+                    <td><b>${escapeHTML(ev.name)}</b></td>
+                    <td>${escapeHTML(ev.location)}</td>
+                    <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" onchange="updateEventComment(${index}, this.value)"></td>
+                    <td style="white-space:nowrap;">
+                        <a href="${calLink}" target="_blank" class="btn-cal-link">➕ В календарь</a>
+                        <button class="complete-btn" onclick="archiveEvent(${index})" style="padding: 6px 12px; margin-left: 4px;">✓</button>
+                    </td>
+                </tr>`;
+            });
+        }
+    }
+
+    function renderArchivedEvents() {
+        const tbody = document.getElementById('archivedCalendarTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        archivedEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (archivedEvents.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888; padding: 15px;">Архив мероприятий пуст.</td></tr>`;
+            return;
+        }
+        archivedEvents.forEach((ev, index) => {
+            tbody.innerHTML += `<tr class="archived-tr">
+                <td><span class="event-tag" style="background:#28a745;">${escapeHTML(ev.date)}</span></td>
+                <td><del>${escapeHTML(ev.name)}</del></td>
+                <td>${escapeHTML(ev.location)}</td>
+                <td><input type="text" class="table-comment-input" value="${escapeHTML(ev.comment)}" placeholder="Внести итоги/гонорары/расходы..." onchange="updateArchivedEventComment(${index}, this.value)"></td>
+                <td>
+                    <button class="delete-btn" onclick="deleteArchivedEvent(${index})" style="padding: 6px 12px;">×</button>
+                </td>
+            </tr>`;
+        });
     }
 
     function addEvent() {
+        const name = document.getElementById('eventName').value.trim();
         const date = document.getElementById('eventDate').value;
-        const name = document.getElementById('eventName').value;
-        if(name) { db.events.push({date, name}); saveData(); }
-    }
-    
-    function addTask() {
-        const name = document.getElementById('taskName').value;
-        if(name) { db.tasks.push({name}); saveData(); }
+        const location = document.getElementById('eventLocation').value.trim();
+        const comment = document.getElementById('eventComment').value.trim();
+        if (!name || !date) return alert("Введите дату и название");
+        
+        const ev = { date, name, location, comment };
+        events.push(ev);
+        saveData(); renderEvents();
+
+        const inlineCalLink = generateGoogleCalendarLink(ev);
+        let message = `📅 *НОВОЕ СОБЫТИЕ В КАЛЕНДАРЕ\\!*\n\n*Что:* ${escapeMarkdownV2(name)}\n*Когда:* ${escapeMarkdownV2(date)}\n*Где:* ${escapeMarkdownV2(location || '—')}\n*Детали:* ${escapeMarkdownV2(comment || '—')}\n\n📥 [Добавить в Google Календарь](${inlineCalLink})`;
+        sendTelegram(message, false);
+
+        document.getElementById('eventName').value = ''; document.getElementById('eventLocation').value = ''; document.getElementById('eventComment').value = '';
     }
 
-    // --- GOOGLE DRIVE (Изолировано) ---
-    function loadGoogleAPI() {
-        if (typeof gapi !== 'undefined') return;
-        const script = document.createElement('script');
-        script.src = "https://apis.google.com/js/api.js";
-        script.onload = () => {
-            gapi.load('client:auth2', () => {
-                document.getElementById('gStatus').innerText = "API загружен. Нажмите кнопку снова для входа.";
-            });
+    function archiveEvent(index) {
+        if(!events[index]) return;
+        archivedEvents.push(events[index]);
+        sendTelegram(`✅ *Мероприятие завершено:* "${escapeMarkdownV2(events[index].name)}" (${escapeMarkdownV2(events[index].date)})`, false);
+        events.splice(index, 1);
+        saveData(); renderEvents(); renderArchivedEvents();
+    }
+
+    function deleteArchivedEvent(index) {
+        if(confirm("Удалить это мероприятие из архива окончательно?")) {
+            archivedEvents.splice(index, 1);
+            saveData(); renderArchivedEvents();
+        }
+    }
+
+    function renderFinance() {
+        const tbody = document.getElementById('financeTableBody');
+        if (!tbody) return; tbody.innerHTML = '';
+        let inc = 0, exp = 0;
+        financeTransactions.forEach((item, index) => {
+            const isInc = item.type === "Доход";
+            const amt = Number(item.amount) || 0;
+            if(isInc) inc += amt; else exp += amt;
+            tbody.innerHTML += `<tr class="${isInc?'income-tr':'expense-tr'}">
+                <td>${escapeHTML(item.date)}</td>
+                <td style="color:${isInc?'var(--success-color)':'var(--danger-color)'}; font-weight:bold;">${item.type}</td>
+                <td><span class="event-tag">${escapeHTML(item.category)}</span></td>
+                <td>${escapeHTML(item.desc)}</td>
+                <td>${amt} MDL</td>
+                <td>${escapeHTML(item.user)}</td>
+                <td><button class="delete-btn" onclick="deleteFin(${index})" style="padding:4px 10px; min-height:30px;">×</button></td>
+            </tr>`;
+        });
+        document.getElementById('totalIncome').innerText = inc + " MDL";
+        document.getElementById('totalExpense').innerText = exp + " MDL";
+        document.getElementById('netBalance').innerText = (inc - exp) + " MDL";
+    }
+
+    function addFinanceTransaction() {
+        const desc = document.getElementById('finDesc').value.trim();
+        const amount = document.getElementById('finAmount').value;
+        if (!desc || !amount) return alert("Заполните поля");
+        
+        const date = document.getElementById('finDate').value;
+        const type = document.getElementById('finType').value;
+        const category = document.getElementById('finCategory').value;
+        const user = document.getElementById('finUser').value.trim() || 'Общий';
+
+        financeTransactions.push({ date, type, category, desc, amount, user });
+        saveData(); renderFinance();
+
+        document.getElementById('finDesc').value = ''; 
+        document.getElementById('finAmount').value = '';
+    }
+
+    function deleteFin(index) { financeTransactions.splice(index, 1); saveData(); renderFinance(); }
+
+    function loadSettingsInputs() {
+        document.getElementById('cfgTgToken').value = TG_TOKEN;
+        document.getElementById('cfgTgChatId').value = TG_CHAT_ID;
+        document.getElementById('cfgBinId').value = CLOUD_BIN_ID;
+        document.getElementById('cfgApiKey').value = CLOUD_API_KEY;
+    }
+
+    function saveSettings() {
+        TG_TOKEN = document.getElementById('cfgTgToken').value.trim();
+        TG_CHAT_ID = document.getElementById('cfgTgChatId').value.trim();
+        SafeStorage.setItem('inflow_tg_token', TG_TOKEN);
+        SafeStorage.setItem('inflow_tg_chat_id', TG_CHAT_ID);
+
+        CLOUD_BIN_ID = document.getElementById('cfgBinId').value.trim();
+        CLOUD_API_KEY = document.getElementById('cfgApiKey').value.trim();
+        SafeStorage.setItem('inflow_bin_id', CLOUD_BIN_ID);
+        SafeStorage.setItem('inflow_api_key', CLOUD_API_KEY);
+
+        alert("Настройки сохранены!");
+    }
+
+    function uploadToCloud() {
+        const binId = document.getElementById('cfgBinId').value.trim();
+        const apiKey = document.getElementById('cfgApiKey').value.trim();
+        if (!binId || !apiKey) return alert("Заполните Bin ID и Master Key в настройках!");
+
+        const payload = { tasks, archivedTasks, financeTransactions, events, archivedEvents };
+
+        fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': apiKey
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.record) alert("База успешно отправлена в облако!");
+            else alert("Ошибка сохранения: " + JSON.stringify(data));
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Ошибка сети при сохранении.");
+        });
+    }
+
+    function downloadFromCloud() {
+        const binId = document.getElementById('cfgBinId').value.trim();
+        const apiKey = document.getElementById('cfgApiKey').value.trim();
+        if (!binId || !apiKey) return alert("Заполните Bin ID и Master Key в настройках!");
+
+        fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            method: 'GET',
+            headers: {
+                'X-Master-Key': apiKey
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.record) {
+                tasks = data.record.tasks || [];
+                archivedTasks = data.record.archivedTasks || [];
+                financeTransactions = data.record.financeTransactions || [];
+                events = data.record.events || [];
+                archivedEvents = data.record.archivedEvents || [];
+                saveData(); 
+                renderAllTables();
+                alert("База данных успешно загружена из облака!");
+            } else {
+                alert("Не удалось загрузить данные: " + JSON.stringify(data));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Ошибка сети при загрузке.");
+        });
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify({ tasks, archivedTasks, financeTransactions, events, archivedEvents }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'inflow_backup.json';
+        a.click();
+    }
+
+    function importData(inputElement) {
+        const file = inputElement.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                tasks = imported.tasks || [];
+                archivedTasks = imported.archivedTasks || [];
+                financeTransactions = imported.financeTransactions || [];
+                events = imported.events || [];
+                archivedEvents = imported.archivedEvents || [];
+                saveData(); renderAllTables();
+                alert("База данных успешно восстановлена!");
+            } catch(err) { alert("Ошибка чтения файла. Убедитесь, что выбрали правильный .json бэкап."); }
         };
-        document.head.appendChild(script);
+        reader.readAsText(file);
     }
 
-    function uploadToGDrive() {
-        if (typeof gapi === 'undefined' || !gapi.auth2) return alert("API не загружен!");
-        // Логика загрузки...
-        alert("Попытка синхронизации...");
+    function resetAllData() {
+        if(confirm("Удалить все данные программы? Внимание: финансы и задачи сотрутся.")) {
+            SafeStorage.clear();
+            tasks = []; archivedTasks = []; financeTransactions = []; events = []; archivedEvents = [];
+            renderAllTables();
+        }
     }
-    
-    function downloadFromGDirect() {
-        if (typeof gapi === 'undefined' || !gapi.auth2) return alert("API не загружен!");
-        // Логика скачивания...
+
+    function renderAllTables() { renderTasks(); renderArchivedTasks(); renderEvents(); renderArchivedEvents(); renderFinance(); }
+
+    function initApp() {
+        loadLocalStorage();
+        loadSettingsInputs();
+        renderAllTables();
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        if(document.getElementById('taskDeadline')) document.getElementById('taskDeadline').value = todayStr;
+        if(document.getElementById('finDate')) document.getElementById('finDate').value = todayStr;
+        if(document.getElementById('eventDate')) document.getElementById('eventDate').value = todayStr;
     }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp); else initApp();
 </script>
 </body>
 </html>
