@@ -308,7 +308,6 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Экранирование спецсимволов для корректной отправки в Telegram MarkdownV2
     function escapeMarkdownV2(str) {
         if (!str) return '';
         return String(str).replace(/([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])/g, '\\$1');
